@@ -30,15 +30,15 @@ const COLORS = ['#2563EB', '#0D9488', '#8B5CF6', '#F59E0B', '#EF4444', '#6B7280'
 const Dashboard = () => {
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Financial Dashboard</h1>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight dark:text-gradient">Financial Dashboard</h1>
         <div className="text-sm text-muted-foreground">
           Last updated: {new Date().toLocaleDateString()}
         </div>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card>
+      <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <Card className="glass-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Revenue
@@ -54,7 +54,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="glass-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Total Expenses
@@ -70,7 +70,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="glass-card sm:col-span-2 lg:col-span-1">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Net Profit
@@ -87,8 +87,8 @@ const Dashboard = () => {
         </Card>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="col-span-1">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        <Card className="col-span-1 glass-card">
           <CardHeader>
             <CardTitle>Expense Breakdown</CardTitle>
           </CardHeader>
@@ -116,14 +116,14 @@ const Dashboard = () => {
           </CardContent>
         </Card>
         
-        <Card className="col-span-1">
+        <Card className="col-span-1 glass-card">
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center justify-between p-2 border rounded-md">
+                <div key={i} className="flex items-center justify-between p-2 border rounded-md dark:border-white/10">
                   <div>
                     <div className="font-medium">
                       {i % 2 === 0 ? 'Client Payment' : 'Vendor Payment'}
@@ -132,7 +132,7 @@ const Dashboard = () => {
                       {new Date(2025, 3, 28 - i).toLocaleDateString()}
                     </div>
                   </div>
-                  <div className={`font-medium ${i % 2 === 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className={`font-medium ${i % 2 === 0 ? 'text-green-500' : 'text-red-500'}`}>
                     {i % 2 === 0 ? '+' : '-'}${(Math.random() * 2000 + 500).toFixed(2)}
                   </div>
                 </div>

@@ -16,21 +16,28 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "./ThemeToggle";
 
 const Sidebar = () => {
   return (
     <SidebarComponent>
-      <SidebarHeader className="border-b py-6">
-        <div className="px-4 flex items-center gap-2">
-          <div className="text-primary font-bold text-xl">
-            Prolific Homecare
+      <SidebarHeader className="border-b border-border py-6">
+        <div className="px-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="Prolific Homecare" className="h-8 w-auto" />
+            <span className="text-primary font-bold text-lg hidden md:inline">
+              Prolific Homecare
+            </span>
           </div>
-          <SidebarTrigger>
-            <Button variant="ghost" size="icon" className="ml-auto">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle sidebar</span>
-            </Button>
-          </SidebarTrigger>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <SidebarTrigger>
+              <Button variant="ghost" size="icon" className="ml-auto">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle sidebar</span>
+              </Button>
+            </SidebarTrigger>
+          </div>
         </div>
       </SidebarHeader>
       
@@ -83,9 +90,9 @@ const Sidebar = () => {
         </nav>
       </SidebarContent>
       
-      <SidebarFooter className="border-t p-4">
+      <SidebarFooter className="border-t border-border p-4">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
             PH
           </div>
           <div>
