@@ -1,9 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { CopyIcon, Search, Trash2, UserPlus } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,15 +24,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -52,43 +43,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
+import { getUsers, createUser, deleteUser } from "@/lib/supabase";
 
-// Mock data - replace with real data from Supabase
-const mockUsers = [
-  {
-    id: 1,
-    name: "John Smith",
-    email: "john@prolific.com",
-    role: "Admin",
-    status: "Active",
-    lastLogin: new Date(2025, 3, 28),
-  },
-  {
-    id: 2,
-    name: "Sarah Johnson",
-    email: "sarah@prolific.com",
-    role: "User",
-    status: "Active",
-    lastLogin: new Date(2025, 3, 25),
-  },
-  {
-    id: 3,
-    name: "Michael Brown",
-    email: "michael@prolific.com",
-    role: "User",
-    status: "Active",
-    lastLogin: new Date(2025, 3, 20),
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    email: "emily@prolific.com",
-    role: "User",
-    status: "Pending",
-    lastLogin: null,
-  },
-];
-
+// Form schema for adding users - admin only
 const formSchema = z.object({
   name: z.string().min(2, {
     message: "Name must be at least 2 characters.",
@@ -96,33 +53,82 @@ const formSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email address.",
   }),
+  password: z.string().min(8, {
+    message: "Password must be at least 8 characters.",
+  }),
   role: z.string({
     required_error: "Please select a role.",
   }),
 });
 
+interface User {
+  id: string;
+  name?: string;
+  email: string;
+  role?: string;
+  status: string;
+  lastLogin: Date | null;
+}
+
 const UserManagement = () => {
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       email: "",
+      password: "",
       role: "User",
     },
   });
   
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setLoading(true);
+        const loadedUsers = await getUsers();
+        
+        const formattedUsers = loadedUsers.map(user => ({
+          id: user.id,
+          name: user.user_metadata?.name || user.email?.split('@')[0] || 'Unknown',
+          email: user.email || 'No Email',
+          role: user.user_metadata?.role || 'User',
+          status: user.email_confirmed_at ? 'Active' : 'Pending',
+          lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at) : null,
+        }));
+        
+        setUsers(formattedUsers);
+      } catch (error) {
+        console.error("Error loading users:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load users.",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadUsers();
+  }, []);
+  
+  // Function to add user - admin only
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // This would connect to Supabase in the real implementation
-      console.log("Adding user:", values);
+      // Create user with API
+      await createUser({
+        email: values.email,
+        password: values.password,
+        role: values.role,
+      });
       
-      // Simulate adding a user
+      // Add to local state
       const newUser = {
-        id: users.length + 1,
+        id: Date.now().toString(), // Temporary ID until refresh
         name: values.name,
         email: values.email,
         role: values.role,
@@ -133,129 +139,54 @@ const UserManagement = () => {
       setUsers([...users, newUser]);
       
       toast({
-        title: "User Invited",
-        description: `Invitation sent to ${values.email}`,
+        title: "User Added",
+        description: `User ${values.email} has been added.`,
       });
       
       form.reset();
-      setIsAddUserOpen(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding user:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "There was a problem inviting the user.",
+        description: error.message || "There was a problem adding the user.",
       });
     }
   };
   
-  const handleDeleteUser = (userId: number) => {
-    setUsers(users.filter(user => user.id !== userId));
-    
-    toast({
-      title: "User Removed",
-      description: "The user has been removed from the system.",
-    });
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      await deleteUser(userId);
+      setUsers(users.filter(user => user.id !== userId));
+      
+      toast({
+        title: "User Removed",
+        description: "The user has been removed from the system.",
+      });
+    } catch (error: any) {
+      console.error("Error deleting user:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to delete user.",
+      });
+    }
   };
   
   const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  const handleCopyInviteLink = (email: string) => {
-    // In a real app, this would copy an actual invite link
-    navigator.clipboard.writeText(`https://prolific-finances.app/invite?email=${email}`);
-    
-    toast({
-      title: "Invite Link Copied",
-      description: "The invitation link has been copied to clipboard.",
-    });
-  };
-  
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">User Management</h1>
       </div>
       
-      <Card>
+      <Card className="glass-card">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Manage Users</CardTitle>
-          <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Invite User
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Invite New User</DialogTitle>
-                <DialogDescription>
-                  Add a new user to the financial tracking system. They will receive an email invitation.
-                </DialogDescription>
-              </DialogHeader>
-              
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="John Smith" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="user@example.com" type="email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="role"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Role</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a role" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Admin">Admin</SelectItem>
-                            <SelectItem value="User">User</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <DialogFooter className="mt-6">
-                    <Button type="submit">Send Invitation</Button>
-                  </DialogFooter>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
         </CardHeader>
         <CardContent>
           <div className="mb-6">
@@ -270,7 +201,7 @@ const UserManagement = () => {
             </div>
           </div>
           
-          <div className="rounded-md border">
+          <div className="overflow-x-auto rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -283,7 +214,13 @@ const UserManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.length > 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      Loading users...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredUsers.length > 0 ? (
                   filteredUsers.map((user) => (
                     <TableRow key={user.id}>
                       <TableCell className="font-medium">{user.name}</TableCell>
@@ -307,16 +244,6 @@ const UserManagement = () => {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          {user.status === "Pending" && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleCopyInviteLink(user.email)}
-                            >
-                              <CopyIcon className="h-4 w-4" />
-                            </Button>
-                          )}
-                          
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="icon">
@@ -354,6 +281,83 @@ const UserManagement = () => {
                 )}
               </TableBody>
             </Table>
+          </div>
+          
+          <div className="mt-8 border-t pt-8">
+            <h3 className="text-lg font-medium mb-4">Add New User (Admin Only)</h3>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="John Smith" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="user@example.com" type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a role" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Admin">Admin</SelectItem>
+                            <SelectItem value="User">User</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <Button type="submit" className="w-full md:w-auto">Add User</Button>
+              </form>
+            </Form>
           </div>
         </CardContent>
       </Card>
