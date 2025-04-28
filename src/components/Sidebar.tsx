@@ -28,6 +28,7 @@ const Sidebar = () => {
           <SidebarTrigger asChild>
             <Button variant="ghost" size="icon" className="ml-auto">
               <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle sidebar</span>
             </Button>
           </SidebarTrigger>
         </div>
