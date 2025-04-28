@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 
 const Sidebar = () => {
   return (
-    <SidebarComponent defaultCollapsed={false}>
+    <SidebarComponent>
       <SidebarHeader className="border-b py-6">
         <div className="px-4 flex items-center gap-2">
           <div className="text-primary font-bold text-xl">
