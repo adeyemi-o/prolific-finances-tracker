@@ -238,10 +238,14 @@ const TransactionList = () => {
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
-                    <PaginationPrevious 
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
-                    />
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
                   </PaginationItem>
                   
                   {Array.from({ length: totalPages }).map((_, index) => {
@@ -281,10 +285,14 @@ const TransactionList = () => {
                   })}
                   
                   <PaginationItem>
-                    <PaginationNext
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                       disabled={currentPage === totalPages}
-                    />
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
