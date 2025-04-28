@@ -25,7 +25,7 @@ const Sidebar = () => {
           <div className="text-primary font-bold text-xl">
             Prolific Homecare
           </div>
-          <SidebarTrigger asChild>
+          <SidebarTrigger>
             <Button variant="ghost" size="icon" className="ml-auto">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle sidebar</span>
