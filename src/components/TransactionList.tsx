@@ -84,7 +84,7 @@ const generateMockTransactions = () => {
 
 const mockTransactions = generateMockTransactions();
 
-const TransactionList = () => {
+const TransactionList = ({ onEditTransaction }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
@@ -109,8 +109,15 @@ const TransactionList = () => {
   const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
   
   // Handle page changes
-  const handlePageChange = (pageNumber: number) => {
+  const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
+  };
+
+  // Handle edit transaction
+  const handleEdit = (transaction) => {
+    if (onEditTransaction) {
+      onEditTransaction(transaction);
+    }
   };
   
   return (
@@ -147,7 +154,7 @@ const TransactionList = () => {
             </div>
           </div>
           
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -193,14 +200,20 @@ const TransactionList = () => {
                       <TableCell>{transaction.description}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => handleEdit(transaction)}
+                          >
                             <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
                           </Button>
                           
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="icon">
                                 <Trash2 className="h-4 w-4 text-red-600" />
+                                <span className="sr-only">Delete</span>
                               </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>

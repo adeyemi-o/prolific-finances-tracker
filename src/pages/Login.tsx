@@ -32,10 +32,14 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
-        <div className="flex justify-center mb-6">
-          <img src="/logo.png" alt="Prolific Homecare" className="h-20 w-auto" />
+        <div className="flex justify-center mb-8">
+          <img 
+            src="/prolific-homecare-logo.png" 
+            alt="Prolific Homecare" 
+            className="h-16 w-auto" 
+          />
         </div>
-        <Card>
+        <Card className="w-full shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center font-bold">Sign in</CardTitle>
             <CardDescription className="text-center">

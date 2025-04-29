@@ -33,8 +33,8 @@ const Sidebar = () => {
 
   return (
     <SidebarComponent>
-      <SidebarHeader className="border-b border-border py-4 md:py-6">
-        <div className="px-4 flex items-center justify-between">
+      <SidebarHeader className="border-b border-border py-3">
+        <div className="px-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img 
               src="/prolific-homecare-logo.png" 
@@ -47,8 +47,8 @@ const Sidebar = () => {
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <SidebarTrigger>
-              <Button variant="ghost" size="icon" className="ml-auto">
+            <SidebarTrigger className="ml-auto md:ml-0">
+              <Button variant="ghost" size="icon" className="h-8 w-8">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle sidebar</span>
               </Button>
@@ -57,7 +57,7 @@ const Sidebar = () => {
         </div>
       </SidebarHeader>
       
-      <SidebarContent>
+      <SidebarContent className="overflow-y-auto">
         <nav className="grid gap-1 px-2 py-4">
           <NavLink 
             to="/" 
@@ -108,7 +108,7 @@ const Sidebar = () => {
         </nav>
       </SidebarContent>
       
-      <SidebarFooter className="border-t border-border p-4">
+      <SidebarFooter className="mt-auto border-t border-border p-4">
         <div className="flex flex-col space-y-4">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
