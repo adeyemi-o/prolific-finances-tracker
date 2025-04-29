@@ -34,28 +34,32 @@ const Sidebar = () => {
   return (
     <SidebarComponent>
       <SidebarHeader className="border-b border-border py-3">
-        <div className="px-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <img 
-              src="/prolific-homecare-logo.png" 
-              alt="Prolific Homecare" 
-              className="h-8 w-auto" 
-            />
-            <span className="text-primary font-bold text-lg hidden md:inline">
-              Prolific Homecare
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <SidebarTrigger className="ml-auto md:ml-0">
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle sidebar</span>
-              </Button>
-            </SidebarTrigger>
-          </div>
-        </div>
-      </SidebarHeader>
+  <div className="px-3 flex items-center justify-between">
+    {/* Changed flex direction and alignment for logo + text */}
+    <div className="flex flex-col items-center space-y-1"> {/* Use flex-col, center items, add vertical space */}
+      <img
+        src="/prolific-homecare-logo.png"
+        alt="Prolific Homecare"
+        className="h-8 w-auto"
+      />
+      {/* Adjusted text size and kept responsive visibility */}
+      <span className="text-primary font-bold text-sm hidden md:block whitespace-nowrap"> {/* Use 'block' for vertical layout */}
+        Financial Tracker
+      </span>
+    </div>
+
+    {/* This part remains the same */}
+    <div className="flex items-center gap-2">
+      <ThemeToggle />
+      <SidebarTrigger className="ml-auto md:ml-0">
+        <Button variant="ghost" size="icon" className="h-8 w-8">
+          <Menu className="h-5 w-5" />
+          <span className="sr-only">Toggle sidebar</span>
+        </Button>
+      </SidebarTrigger>
+    </div>
+  </div>
+</SidebarHeader>
       
       <SidebarContent className="overflow-y-auto">
         <nav className="grid gap-1 px-2 py-4">
