@@ -1,11 +1,10 @@
-
 import { createClient } from '@supabase/supabase-js';
 
-// Check for required environment variables
+// Access environment variables
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Validate environment variables
+// Check if environment variables are available
 if (!supabaseUrl) {
   console.error('VITE_SUPABASE_URL environment variable is missing');
 }
@@ -14,11 +13,10 @@ if (!supabaseKey) {
   console.error('VITE_SUPABASE_ANON_KEY environment variable is missing');
 }
 
-// Initialize the Supabase client with empty strings as fallbacks to prevent runtime errors
-// This will still show error messages in the console but won't crash the app
+// Initialize Supabase client with proper values
 export const supabase = createClient(
-  supabaseUrl || 'https://placeholder-url.supabase.co', 
-  supabaseKey || 'placeholder-key'
+  supabaseUrl as string, 
+  supabaseKey as string
 );
 
 // Authentication functions
