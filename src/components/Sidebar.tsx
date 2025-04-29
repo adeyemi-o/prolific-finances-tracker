@@ -36,7 +36,11 @@ const Sidebar = () => {
       <SidebarHeader className="border-b border-border py-4 md:py-6">
         <div className="px-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Prolific Homecare" className="h-8 w-auto" />
+            <img 
+              src="/prolific-homecare-logo.png" 
+              alt="Prolific Homecare" 
+              className="h-8 w-auto" 
+            />
             <span className="text-primary font-bold text-lg hidden md:inline">
               Prolific Homecare
             </span>
