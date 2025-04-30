@@ -11,8 +11,7 @@ import {
   YAxis,
   CartesianGrid,
   LineChart,
-  Line,
-  Legend // Added Legend import
+  Line
 } from "recharts";
 import { ArrowUp, ArrowDown, TrendingUp, DollarSign, CreditCard, ChevronRight, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,9 +29,6 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-// Import TooltipProps type
-import { TooltipProps } from 'recharts';
-import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 
 interface SummaryData {
   totalRevenue: number;
@@ -93,39 +89,6 @@ const formatPercentageChange = (change: number | null): React.ReactNode => {
       {Math.abs(change).toFixed(1)}% from last period
     </p>
   );
-};
-
-// Helper function to format currency
-const formatCurrency = (value: number) => {
-  return value.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-};
-
-// Custom Tooltip Component
-const CustomPieTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) => {
-  if (active && payload && payload.length) {
-    const data = payload[0]; // Data for the hovered slice
-    const name = data.name;
-    const value = data.value as number;
-    // Access the fill color directly from the payload item associated with the Cell
-    const color = data.payload?.fill || data.color; // Fallback to data.color if fill isn't directly on payload
-
-    return (
-      <div className="rounded-lg border bg-popover p-2.5 shadow-sm">
-        <div className="flex flex-col gap-1">
-          {/* Apply the color to the category name */}
-          <span style={{ color: color }} className="font-semibold text-sm">{name}</span>
-          <span className="text-popover-foreground text-sm">{formatCurrency(value)}</span>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
 };
 
 const Dashboard = () => {
@@ -326,6 +289,15 @@ const Dashboard = () => {
     setRecentTransactions(formattedRecent);
   };
 
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('en-US', { 
+      style: 'currency', 
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -464,7 +436,17 @@ const Dashboard = () => {
                         />
                       ))}
                     </Pie>
-                    <Tooltip content={<CustomPieTooltip />} />
+                    <Tooltip 
+                      formatter={(value, name) => [`${formatCurrency(Number(value))}`, name]} 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--popover))',
+                        borderColor: 'hsl(var(--border))',
+                        color: 'hsl(var(--popover-foreground))',
+                        borderRadius: 'var(--radius)',
+                        boxShadow: 'var(--shadow-md)'
+                      }}
+                      cursor={{ fill: 'hsl(var(--accent))' , opacity: 0.3 }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (

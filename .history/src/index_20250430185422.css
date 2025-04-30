@@ -185,33 +185,10 @@
   
   /* Navigation elements */
   .nav-item {
-    @apply relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors duration-150;
-    @apply text-muted-foreground hover:text-foreground hover:bg-accent/70 active:scale-[0.98];
+    @apply transition-colors duration-200 hover:bg-accent/50 rounded-md px-3 py-2;
   }
   .nav-item-active {
-    @apply bg-primary/10 text-primary font-semibold;
-  }
-  .nav-item-active::before {
-    @apply content-[''] absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary;
-  }
-  .nav-item-icon {
-    @apply h-5 w-5 flex-shrink-0 transition-colors duration-150 group-hover:text-foreground;
-  }
-  .nav-item-text {
-    @apply transition-opacity duration-200 whitespace-nowrap;
-  }
-  .nav-item-text-collapsed {
-    @apply opacity-0 absolute left-full ml-3 px-2 py-1 rounded-md bg-popover text-popover-foreground text-xs shadow-md scale-95 pointer-events-none;
-    @apply group-hover:opacity-100 group-hover:scale-100 group-hover:delay-200 transition-all duration-150;
-  }
-  .group[class*="justify-center"] .nav-item-icon {
-    @apply mx-auto;
-  }
-  .group[class*="justify-center"] .nav-item-active::before {
-    @apply hidden;
-  }
-  .group[class*="justify-center"] {
-    @apply justify-center px-2;
+    @apply bg-accent text-accent-foreground;
   }
 }
 
@@ -278,7 +255,7 @@
   
   /* Mobile optimizations */
   .touch-target {
-    @apply min-h-[48px] min-w-[48px] flex items-center justify-center;
+    @apply min-h-[44px] min-w-[44px]; /* Minimum size for touch targets */
   }
   
   .scrollbar-hide {

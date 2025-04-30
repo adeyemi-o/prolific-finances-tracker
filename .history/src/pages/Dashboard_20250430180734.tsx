@@ -4,6 +4,7 @@ import {
   Pie, 
   Cell, 
   ResponsiveContainer, 
+  Legend, 
   Tooltip,
   BarChart,
   Bar,
@@ -11,36 +12,27 @@ import {
   YAxis,
   CartesianGrid,
   LineChart,
-  Line,
-  Legend // Added Legend import
+  Line
 } from "recharts";
-import { ArrowUp, ArrowDown, TrendingUp, DollarSign, CreditCard, ChevronRight, CalendarDays } from "lucide-react";
+import { ArrowUp, ArrowDown, TrendingUp, DollarSign, CreditCard, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useMobile, useTablet } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
-import { getTransactions } from "@/lib/supabase-transactions";
+import { getTransactions } from "@/lib/supabase";
+import { Transaction } from "@/components/transaction-list/TransactionMockData";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-// Import TooltipProps type
-import { TooltipProps } from 'recharts';
-import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
+import { DateRange } from "react-day-picker";
 
 interface SummaryData {
   totalRevenue: number;
   totalExpenses: number;
   netProfit: number;
-  revenueChange: number | null;
-  expenseChange: number | null;
-  netProfitChange: number | null;
+  revenueChange: number | null; // Percentage change from previous month
+  expenseChange: number | null; // Percentage change from previous month
+  netProfitChange: number | null; // Percentage change from previous month
 }
 
 interface ExpenseData {
@@ -62,70 +54,29 @@ interface RecentTransaction {
   type: string;
 }
 
-// Define Transaction type based on expected Supabase structure
-interface Transaction {
-  id: number; // Or string if using UUIDs
-  created_at: string; // Supabase timestamp
-  date: string; // Date string (e.g., 'YYYY-MM-DD')
-  type: "Income" | "Expense";
-  category: string;
-  amount: number;
-  description?: string | null;
-}
+const COLORS = ['#2563EB', '#0D9488', '#8B5CF6', '#F59E0B', '#EF4444', '#6B7280'];
 
-const COLORS = ['#2563EB', '#0D9488', '#8B5CF6', '#F59E0B', '#EF4444', '#6B7280', '#10B981', '#EC4899', '#F97316', '#3B82F6'];
-
+// Helper function to format percentage change
 const formatPercentageChange = (change: number | null): React.ReactNode => {
   if (change === null) {
-    return <span className="text-xs text-muted-foreground">vs last period N/A</span>;
+    // Handle cases like infinite increase or no previous data
+    return <span className="text-xs text-muted-foreground">vs last month N/A</span>;
   }
   if (change === 0) {
-    return <span className="text-xs text-muted-foreground">0% from last period</span>;
+    return <span className="text-xs text-muted-foreground">0% from last month</span>;
   }
 
   const isPositive = change > 0;
+  // Use specific text colors for positive/negative change
   const colorClass = isPositive ? "text-money-positive" : "text-money-negative"; 
   const Icon = isPositive ? ArrowUp : ArrowDown;
 
   return (
     <p className={cn("text-xs text-muted-foreground flex items-center gap-1", colorClass)}>
       <Icon className="h-3 w-3" />
-      {Math.abs(change).toFixed(1)}% from last period
+      {Math.abs(change).toFixed(1)}% from last month
     </p>
   );
-};
-
-// Helper function to format currency
-const formatCurrency = (value: number) => {
-  return value.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
-};
-
-// Custom Tooltip Component
-const CustomPieTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>) => {
-  if (active && payload && payload.length) {
-    const data = payload[0]; // Data for the hovered slice
-    const name = data.name;
-    const value = data.value as number;
-    // Access the fill color directly from the payload item associated with the Cell
-    const color = data.payload?.fill || data.color; // Fallback to data.color if fill isn't directly on payload
-
-    return (
-      <div className="rounded-lg border bg-popover p-2.5 shadow-sm">
-        <div className="flex flex-col gap-1">
-          {/* Apply the color to the category name */}
-          <span style={{ color: color }} className="font-semibold text-sm">{name}</span>
-          <span className="text-popover-foreground text-sm">{formatCurrency(value)}</span>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
 };
 
 const Dashboard = () => {
@@ -140,15 +91,7 @@ const Dashboard = () => {
   const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [timePeriod, setTimePeriod] = useState<string>("6m");
-
-  const timePeriodLabels: Record<string, string> = {
-    "1m": "Last Month",
-    "3m": "Last 3 Months",
-    "6m": "Last 6 Months",
-    "ytd": "Year to Date",
-    "all": "All Time",
-  };
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -156,7 +99,7 @@ const Dashboard = () => {
       setError(null);
       try {
         const rawData = await getTransactions();
-        const formattedTransactions: Transaction[] = (rawData as any[]).map(item => ({
+        const formattedTransactions: Transaction[] = rawData.map(item => ({
           id: item.id,
           date: new Date(item.date),
           type: item.type,
@@ -165,7 +108,7 @@ const Dashboard = () => {
           description: item.description || ''
         }));
         setTransactions(formattedTransactions);
-        processData(formattedTransactions, timePeriod);
+        processData(formattedTransactions, dateRange);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
         setError("Failed to load dashboard data. Please try again later.");
@@ -180,67 +123,52 @@ const Dashboard = () => {
     };
 
     fetchData();
-  }, [toast, timePeriod]);
+  }, [toast, dateRange]);
 
-  const processData = (data: Transaction[], period: string) => {
+  const processData = (data: Transaction[], range?: DateRange) => {
     const now = new Date();
     let startDate: Date;
-    let endDate: Date = new Date(now);
-    endDate.setHours(23, 59, 59, 999);
-
+    let endDate: Date;
     let prevStartDate: Date;
     let prevEndDate: Date;
 
-    switch (period) {
-      case "1m":
-        startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-        prevEndDate = new Date(startDate.getTime() - 1);
-        prevStartDate = new Date(prevEndDate.getFullYear(), prevEndDate.getMonth() - 1, prevEndDate.getDate());
-        break;
-      case "3m":
-        startDate = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
-        prevEndDate = new Date(startDate.getTime() - 1);
-        prevStartDate = new Date(prevEndDate.getFullYear(), prevEndDate.getMonth() - 3, prevEndDate.getDate());
-        break;
-      case "ytd":
-        startDate = new Date(now.getFullYear(), 0, 1);
-        prevEndDate = new Date(startDate.getTime() - 1);
-        prevStartDate = new Date(prevEndDate.getFullYear() - 1, 0, 1);
-        break;
-      case "all":
-        startDate = new Date(0);
-        prevStartDate = new Date(0);
-        prevEndDate = new Date(0);
-        break;
-      case "6m":
-      default:
-        startDate = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
-        prevEndDate = new Date(startDate.getTime() - 1);
-        prevStartDate = new Date(prevEndDate.getFullYear(), prevEndDate.getMonth() - 6, prevEndDate.getDate());
-        break;
-    }
+    if (range?.from && range?.to) {
+      startDate = range.from;
+      endDate = new Date(range.to);
+      endDate.setHours(23, 59, 59, 999);
 
-    const currentPeriodTransactions = data.filter(tx => tx.date >= startDate && tx.date <= endDate);
-    const previousPeriodTransactions = period !== 'all' ? data.filter(tx => tx.date >= prevStartDate && tx.date <= prevEndDate) : [];
+      const diff = endDate.getTime() - startDate.getTime();
+      prevEndDate = new Date(startDate.getTime() - 1);
+      prevStartDate = new Date(prevEndDate.getTime() - diff);
+    } else {
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+      startDate = new Date(currentYear, currentMonth, 1);
+      endDate = new Date(currentYear, currentMonth + 1, 1);
+
+      prevStartDate = new Date(currentYear, currentMonth - 1, 1);
+      prevEndDate = new Date(currentYear, currentMonth, 1);
+    }
 
     let currentPeriodRevenue = 0;
     let currentPeriodExpenses = 0;
     let previousPeriodRevenue = 0;
     let previousPeriodExpenses = 0;
 
-    currentPeriodTransactions.forEach(tx => {
-      if (tx.type === 'Income') {
-        currentPeriodRevenue += tx.amount;
-      } else if (tx.type === 'Expense') {
-        currentPeriodExpenses += tx.amount;
-      }
-    });
-
-    previousPeriodTransactions.forEach(tx => {
-      if (tx.type === 'Income') {
-        previousPeriodRevenue += tx.amount;
-      } else if (tx.type === 'Expense') {
-        previousPeriodExpenses += tx.amount;
+    data.forEach(tx => {
+      const txDate = tx.date;
+      if (txDate >= startDate && txDate < endDate) {
+        if (tx.type === 'Income') {
+          currentPeriodRevenue += tx.amount;
+        } else if (tx.type === 'Expense') {
+          currentPeriodExpenses += tx.amount;
+        }
+      } else if (txDate >= prevStartDate && txDate < prevEndDate) {
+        if (tx.type === 'Income') {
+          previousPeriodRevenue += tx.amount;
+        } else if (tx.type === 'Expense') {
+          previousPeriodExpenses += tx.amount;
+        }
       }
     });
 
@@ -252,7 +180,6 @@ const Dashboard = () => {
     const netProfit = currentPeriodNetProfit;
 
     const calculateChange = (current: number, previous: number): number | null => {
-      if (period === 'all') return null;
       if (previous === 0) {
         return current === 0 ? 0 : null;
       }
@@ -262,14 +189,12 @@ const Dashboard = () => {
     const revenueChange = calculateChange(currentPeriodRevenue, previousPeriodRevenue);
     const expenseChange = calculateChange(currentPeriodExpenses, previousPeriodExpenses);
     let netProfitChange: number | null = null;
-    if (period !== 'all') {
-      if (previousPeriodNetProfit !== 0) {
-        netProfitChange = ((currentPeriodNetProfit - previousPeriodNetProfit) / Math.abs(previousPeriodNetProfit)) * 100;
-      } else if (currentPeriodNetProfit !== 0) {
-        netProfitChange = null;
-      } else {
-        netProfitChange = 0;
-      }
+    if (previousPeriodNetProfit !== 0) {
+      netProfitChange = ((currentPeriodNetProfit - previousPeriodNetProfit) / Math.abs(previousPeriodNetProfit)) * 100;
+    } else if (currentPeriodNetProfit > 0) {
+      netProfitChange = null;
+    } else {
+      netProfitChange = 0;
     }
 
     setSummaryData({
@@ -282,8 +207,7 @@ const Dashboard = () => {
     });
 
     const expensesByCategory: Record<string, number> = {};
-    currentPeriodTransactions
-      .filter(tx => tx.type === 'Expense')
+    data.filter(tx => tx.type === 'Expense' && tx.date >= startDate && tx.date < endDate)
       .forEach(tx => {
         expensesByCategory[tx.category] = (expensesByCategory[tx.category] || 0) + tx.amount;
       });
@@ -293,12 +217,12 @@ const Dashboard = () => {
     setExpenseData(formattedExpenseData);
 
     const monthlyAgg: Record<string, { revenue: number; expenses: number }> = {};
-    const sixMonthsAgoChart = new Date();
-    sixMonthsAgoChart.setMonth(sixMonthsAgoChart.getMonth() - 5);
-    sixMonthsAgoChart.setDate(1);
-    sixMonthsAgoChart.setHours(0, 0, 0, 0);
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
 
-    data.filter(tx => tx.date >= sixMonthsAgoChart).forEach(tx => {
+    data.filter(tx => tx.date >= sixMonthsAgo).forEach(tx => {
       const monthYear = tx.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
       if (!monthlyAgg[monthYear]) {
         monthlyAgg[monthYear] = { revenue: 0, expenses: 0 };
@@ -324,6 +248,19 @@ const Dashboard = () => {
       type: tx.type.toLowerCase()
     }));
     setRecentTransactions(formattedRecent);
+  };
+
+  const handleDateRangeChange = (newRange: DateRange | undefined) => {
+    setDateRange(newRange);
+  };
+
+  const formatCurrency = (value: number) => {
+    return value.toLocaleString('en-US', { 
+      style: 'currency', 
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
   };
 
   if (isLoading) {
@@ -365,21 +302,11 @@ const Dashboard = () => {
             Financial Dashboard
           </h1>
           <p className="text-muted-foreground mt-1">
-            Snapshot of your financial performance for: {timePeriodLabels[timePeriod]}
+            Get a snapshot of your financial performance
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Select value={timePeriod} onValueChange={setTimePeriod}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <CalendarDays className="mr-2 h-4 w-4 text-muted-foreground" />
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(timePeriodLabels).map(([value, label]) => (
-                <SelectItem key={value} value={value}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex items-center bg-muted/50 backdrop-blur-sm px-3 py-1.5 rounded-md text-sm text-muted-foreground border border-border/50">
+          <span>Last updated: {new Date().toLocaleString()}</span>
         </div>
       </div>
       
@@ -388,7 +315,7 @@ const Dashboard = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-primary" />
-              Total Revenue ({timePeriodLabels[timePeriod]})
+              Total Revenue {dateRange?.from ? `(${dateRange.from.toLocaleDateString()} - ${dateRange.to?.toLocaleDateString()})` : '(This Month)'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -403,7 +330,7 @@ const Dashboard = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <CreditCard className="h-4 w-4 text-primary" />
-              Total Expenses ({timePeriodLabels[timePeriod]})
+              Total Expenses {dateRange?.from ? `(${dateRange.from.toLocaleDateString()} - ${dateRange.to?.toLocaleDateString()})` : '(This Month)'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -418,7 +345,7 @@ const Dashboard = () => {
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-primary" />
-              Net Profit ({timePeriodLabels[timePeriod]})
+              Net Profit {dateRange?.from ? `(${dateRange.from.toLocaleDateString()} - ${dateRange.to?.toLocaleDateString()})` : '(This Month)'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -435,108 +362,104 @@ const Dashboard = () => {
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-md font-semibold">Expense Breakdown</CardTitle>
             <Badge variant="outline" className="font-normal text-xs">
-              {timePeriodLabels[timePeriod]}
+              {dateRange?.from ? `(${dateRange.from.toLocaleDateString()} - ${dateRange.to?.toLocaleDateString()})` : 'This month'}
             </Badge>
           </CardHeader>
           <CardContent className="pt-0">
             <div className={isMobile ? "h-[250px] mt-4" : "h-[300px]"}>
-              {expenseData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={expenseData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={isMobile ? 80 : 110}
-                      innerRadius={isMobile ? 40 : 60}
-                      fill="#8884d8"
-                      dataKey="value"
-                      paddingAngle={2}
-                    >
-                      {expenseData.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`} 
-                          fill={COLORS[index % COLORS.length]} 
-                          className="hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full"
-                          stroke="hsl(var(--background))"
-                          strokeWidth={1}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomPieTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  No expense data for this period.
-                </div>
-              )}
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={expenseData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={isMobile ? 80 : 100}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={isMobile ? ({ name, percent }) => 
+                      percent > 0.05 ? `${name} ${(percent * 100).toFixed(0)}%` : '' 
+                      : ({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`
+                    }
+                  >
+                    {expenseData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={COLORS[index % COLORS.length]} 
+                        className="hover:opacity-80 transition-opacity"
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value) => formatCurrency(Number(value))} 
+                    contentStyle={{ 
+                      borderRadius: '8px',
+                      border: '1px solid rgba(0,0,0,0.1)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    }}
+                  />
+                  {!isMobile && <Legend formatter={(value) => <span className="text-sm">{value}</span>} />}
+                </PieChart>
+              </ResponsiveContainer>
             </div>
+            
+            {isMobile && (
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                {expenseData.map((item, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <div 
+                      className="w-3 h-3 rounded-sm" 
+                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                    />
+                    <div className="flex justify-between w-full">
+                      <span className="text-muted-foreground">{item.name}</span>
+                      <span className="font-medium tabular-nums">{formatCurrency(item.value)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
         
         <Card className="col-span-1 glass-card hover-lift transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-semibold">Revenue vs Expenses</CardTitle>
-            <Badge variant="outline" className="font-normal text-xs">
-              Last 6 Months
+            <CardDescription>Last 6 months comparison</CardDescription>
+            <Badge variant="outline" className="font-normal">
+              6 months
             </Badge>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="h-[300px]">
-              {monthlyData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  {isMobile ? (
-                    <LineChart
-                      data={monthlyData}
-                      margin={{ top: 20, right: 5, left: 0, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                      <XAxis dataKey="name" fontSize={10} />
-                      <YAxis width={40} tickFormatter={(value) => `$${value/1000}k`} fontSize={10} />
-                      <Tooltip 
-                        formatter={(value) => formatCurrency(Number(value))} 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--popover))',
-                          borderColor: 'hsl(var(--border))',
-                          color: 'hsl(var(--popover-foreground))',
-                          borderRadius: 'var(--radius)',
-                          boxShadow: 'var(--shadow-md)'
-                        }}
-                      />
-                      <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} name="Revenue" />
-                      <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} name="Expenses" />
-                    </LineChart>
-                  ) : (
-                    <BarChart
-                      data={monthlyData}
-                      margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                      <XAxis dataKey="name" fontSize={12} />
-                      <YAxis width={60} tickFormatter={(value) => `$${value/1000}k`} fontSize={12} />
-                      <Tooltip 
-                        formatter={(value) => formatCurrency(Number(value))} 
-                        contentStyle={{ 
-                          backgroundColor: 'hsl(var(--popover))',
-                          borderColor: 'hsl(var(--border))',
-                          color: 'hsl(var(--popover-foreground))',
-                          borderRadius: 'var(--radius)',
-                          boxShadow: 'var(--shadow-md)'
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Bar dataKey="revenue" name="Revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="expenses" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                  )}
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  Not enough data for monthly comparison.
-                </div>
-              )}
+              <ResponsiveContainer width="100%" height="100%">
+                {isMobile ? (
+                  <LineChart
+                    data={monthlyData}
+                    margin={{ top: 20, right: 5, left: 0, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis dataKey="name" />
+                    <YAxis width={40} tickFormatter={(value) => `$${value/1000}k`} />
+                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                    <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} name="Revenue" />
+                    <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} name="Expenses" />
+                  </LineChart>
+                ) : (
+                  <BarChart
+                    data={monthlyData}
+                    margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
+                    <XAxis dataKey="name" />
+                    <YAxis width={60} tickFormatter={(value) => `$${value/1000}k`} />
+                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                    <Legend />
+                    <Bar dataKey="revenue" name="Revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="expenses" name="Expenses" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                )}
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>

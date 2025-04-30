@@ -17,7 +17,7 @@ import {
 import { incomeCategories, expenseCategories } from "@/constants/transactionCategories";
 import { UseFormReturn } from "react-hook-form";
 import { TransactionFormValues } from "@/schemas/transactionSchema";
-import { Tag, TagIcon, BriefcaseIcon, HomeIcon, ShoppingCartIcon, LightbulbIcon, HeartPulseIcon, CarIcon, CreditCardIcon, LaptopIcon } from "lucide-react";
+import { Tag, TagIcon, BriefcaseIcon, HomeIcon, ShoppingCartIcon, LightbulbIcon, HeartPulseIcon, CarIcon, CreditCardIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMobile } from "@/hooks/use-mobile";
 
@@ -47,7 +47,6 @@ const categoryIcons: Record<string, React.ReactNode> = {
   "Marketing": <TagIcon className="h-4 w-4" />,
   "Training": <BriefcaseIcon className="h-4 w-4" />,
   "Legal & Professional": <BriefcaseIcon className="h-4 w-4" />,
-  "Technology": <LaptopIcon className="h-4 w-4" />,
   "Other Expenses": <CreditCardIcon className="h-4 w-4" />,
 };
 
