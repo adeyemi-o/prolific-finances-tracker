@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TransactionForm from "@/components/TransactionForm";
-import TransactionList from "@/components/TransactionList";
+import { TransactionList } from "@/components/transaction-list";
 
 const Transactions = () => {
   const [activeTab, setActiveTab] = useState("list");

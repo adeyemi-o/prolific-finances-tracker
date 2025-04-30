@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { transactionFormSchema, TransactionFormValues } from "@/schemas/transactionSchema";
 import { TransactionDateField } from "./transaction/TransactionDateField";
 import { TransactionTypeField } from "./transaction/TransactionTypeField";
@@ -12,6 +12,7 @@ import { TransactionCategoryField } from "./transaction/TransactionCategoryField
 import { TransactionAmountField } from "./transaction/TransactionAmountField";
 import { TransactionDescriptionField } from "./transaction/TransactionDescriptionField";
 import { TransactionFormActions } from "./transaction/TransactionFormActions";
+import { addTransaction, updateTransaction } from "@/lib/supabase";
 
 type TransactionFormProps = {
   onTransactionAdded: () => void;
@@ -20,6 +21,7 @@ type TransactionFormProps = {
 
 const TransactionForm = ({ onTransactionAdded, editData }: TransactionFormProps) => {
   const [transactionType, setTransactionType] = useState(editData?.type || "Income");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionFormSchema),
@@ -33,15 +35,31 @@ const TransactionForm = ({ onTransactionAdded, editData }: TransactionFormProps)
   });
 
   const onSubmit = async (values: TransactionFormValues) => {
+    setIsSubmitting(true);
     try {
-      // This would connect to Supabase in the real implementation
-      console.log("Submitting transaction:", values);
-      
-      // Simulate success
-      toast({
-        title: "Transaction Added",
-        description: "Your transaction has been successfully recorded.",
-      });
+      const transactionData = {
+        date: values.date.toISOString().split('T')[0],
+        type: values.type,
+        category: values.category,
+        amount: parseFloat(values.amount),
+        description: values.description,
+      };
+
+      if (editData) {
+        // Update existing transaction
+        await updateTransaction(String(editData.id), transactionData);
+        toast({
+          title: "Transaction Updated",
+          description: "Your transaction has been successfully updated.",
+        });
+      } else {
+        // Add new transaction
+        await addTransaction(transactionData);
+        toast({
+          title: "Transaction Added",
+          description: "Your transaction has been successfully recorded.",
+        });
+      }
       
       form.reset({
         date: new Date(),
@@ -53,12 +71,14 @@ const TransactionForm = ({ onTransactionAdded, editData }: TransactionFormProps)
       
       onTransactionAdded();
     } catch (error) {
-      console.error("Error adding transaction:", error);
+      console.error("Error adding/updating transaction:", error);
       toast({
         variant: "destructive",
         title: "Error",
         description: "There was a problem recording your transaction.",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -85,7 +105,7 @@ const TransactionForm = ({ onTransactionAdded, editData }: TransactionFormProps)
             </div>
 
             <TransactionDescriptionField form={form} />
-            <TransactionFormActions form={form} isEditing={!!editData} />
+            <TransactionFormActions form={form} isEditing={!!editData} isSubmitting={isSubmitting} />
           </form>
         </Form>
       </CardContent>

@@ -34,9 +34,10 @@ type Transaction = {
 type TransactionTableProps = {
   transactions: Transaction[];
   onEdit: (transaction: Transaction) => void;
+  onDelete: (id: number) => Promise<void>;
 };
 
-export const TransactionTable = ({ transactions, onEdit }: TransactionTableProps) => {
+export const TransactionTable = ({ transactions, onEdit, onDelete }: TransactionTableProps) => {
   return (
     <div className="rounded-md border overflow-x-auto">
       <Table>
@@ -109,7 +110,10 @@ export const TransactionTable = ({ transactions, onEdit }: TransactionTableProps
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction className="bg-red-600 hover:bg-red-700">
+                          <AlertDialogAction 
+                            className="bg-red-600 hover:bg-red-700"
+                            onClick={() => onDelete(transaction.id)}
+                          >
                             Delete
                           </AlertDialogAction>
                         </AlertDialogFooter>
