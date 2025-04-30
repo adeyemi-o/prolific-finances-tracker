@@ -4,7 +4,8 @@ import Sidebar from "./Sidebar";
 
 const Layout = () => {
   return (
-    <Sidebar>
+    <div className="flex">
+      <Sidebar />
       <div className="w-full">
         <main className="flex-1 p-3 md:p-6 lg:p-8 overflow-y-auto">
           <div className="container mx-auto max-w-7xl">
@@ -12,7 +13,7 @@ const Layout = () => {
           </div>
         </main>
       </div>
-    </Sidebar>
+    </div>
   );
 };
 

@@ -51,6 +51,12 @@ const TransactionList = ({ onEditTransaction }: TransactionListProps) => {
     setCurrentPage(1); // Reset to first page when filtering
   };
   
+  // Handle delete transaction (stub function)
+  const handleDeleteTransaction = async (id: number) => {
+    console.log("Delete transaction:", id);
+    // In a real implementation, this would call an API to delete the transaction
+  };
+  
   return (
     <div className="space-y-4">
       <Card>
@@ -68,6 +74,7 @@ const TransactionList = ({ onEditTransaction }: TransactionListProps) => {
           <TransactionTable 
             transactions={currentItems}
             onEdit={onEditTransaction}
+            onDelete={handleDeleteTransaction}
           />
           
           {filteredTransactions.length > itemsPerPage && (
