@@ -1,11 +1,14 @@
-import React, { useState } from "react"; // Added React import for clarity
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Lottie from 'lottie-react'; // Import Lottie
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { LockKeyhole, Mail } from "lucide-react";
+// Assuming you saved the animation JSON in public/login-animation.json
+import loginAnimationData from '/login-animation.json';
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -32,18 +35,9 @@ const Login = () => {
   };
 
   return (
-    // Outer container: Takes full screen height and centers its child vertically and horizontally
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      {/* Inner container: Grid layout for login form and accounting image */}
+    // Use a grid layout for desktop, centering content
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center max-w-4xl w-full">
-        {/* Accounting Image Column (Hidden on mobile, visible on md screens and up) */}
-        <div className="hidden md:flex justify-center items-center">
-          <img 
-            src="/analysis-business-finance.svg" // Replace with your accounting image in public folder
-            alt="Accounting illustration" 
-            className="w-[500px] h-[500px] object-contain opacity-80" // Increased width and height
-          />
-        </div>
         {/* Login Form Column */}
         <div className="w-full max-w-md mx-auto md:mx-0">
           {/* Logo container: Centers the logo */}
@@ -99,12 +93,6 @@ const Login = () => {
                       aria-label="Password" // Added aria-label for accessibility
                     />
                   </div>
-                  {/* Optional: Add Forgot Password link here */}
-                  {/* <div className="text-right text-sm">
-                    <a href="#" className="font-medium text-primary hover:underline">
-                      Forgot password?
-                    </a>
-                  </div> */}
                 </div>
               </CardContent>
               <CardFooter>
@@ -114,14 +102,16 @@ const Login = () => {
                 </Button>
               </CardFooter>
             </form>
-             {/* Optional: Add Sign up link here */}
-             {/* <div className="mt-4 text-center text-sm text-muted-foreground">
-               Don't have an account?{' '}
-               <a href="/signup" className="font-medium text-primary hover:underline">
-                 Sign up
-               </a>
-             </div> */}
           </Card>
+        </div>
+
+        {/* Animation Column (Hidden on mobile, visible on md screens and up) */}
+        <div className="hidden md:flex justify-center items-center">
+          <Lottie 
+            animationData={loginAnimationData} 
+            loop={true} 
+            style={{ width: 300, height: 300 }} // Adjust size as needed
+          />
         </div>
       </div>
     </div>

@@ -36,14 +36,6 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       {/* Inner container: Grid layout for login form and accounting image */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center max-w-4xl w-full">
-        {/* Accounting Image Column (Hidden on mobile, visible on md screens and up) */}
-        <div className="hidden md:flex justify-center items-center">
-          <img 
-            src="/analysis-business-finance.svg" // Replace with your accounting image in public folder
-            alt="Accounting illustration" 
-            className="w-[500px] h-[500px] object-contain opacity-80" // Increased width and height
-          />
-        </div>
         {/* Login Form Column */}
         <div className="w-full max-w-md mx-auto md:mx-0">
           {/* Logo container: Centers the logo */}
@@ -122,6 +114,15 @@ const Login = () => {
                </a>
              </div> */}
           </Card>
+        </div>
+
+        {/* Accounting Image Column (Hidden on mobile, visible on md screens and up) */}
+        <div className="hidden md:flex justify-center items-center">
+          <img 
+            src="/analysis-business-finance.svg" // Replace with your accounting image in public folder
+            alt="Accounting illustration" 
+            className="w-[500px] h-[500px] object-contain opacity-80" // Increased width and height
+          />
         </div>
       </div>
     </div>
