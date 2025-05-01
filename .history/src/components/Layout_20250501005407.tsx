@@ -7,14 +7,16 @@ import { Toaster } from "@/components/ui/sonner";
 
 const Layout = () => {
   const isMobile = useMobile();
-  // Initialize sidebarOpen directly based on the initial isMobile value
-  const [sidebarOpen, setSidebarOpen] = useState(() => !isMobile);
+  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
 
   // Update sidebar state when screen size changes
   useEffect(() => {
-    // If the screen becomes mobile, close the sidebar.
     if (isMobile) {
+      // Explicitly close sidebar on mobile
       setSidebarOpen(false);
+    } else {
+      // Optionally re-open sidebar on desktop (or maintain previous state)
+      // setSidebarOpen(true); // Uncomment to always open on desktop resize
     }
   }, [isMobile]);
 

@@ -7,14 +7,17 @@ import { Toaster } from "@/components/ui/sonner";
 
 const Layout = () => {
   const isMobile = useMobile();
-  // Initialize sidebarOpen directly based on the initial isMobile value
-  const [sidebarOpen, setSidebarOpen] = useState(() => !isMobile);
+  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
 
   // Update sidebar state when screen size changes
   useEffect(() => {
-    // If the screen becomes mobile, close the sidebar.
-    if (isMobile) {
-      setSidebarOpen(false);
+    if (isMobile && sidebarOpen) {
+      const wasDesktop = !isMobile;
+      if (wasDesktop) {
+        // Optionally close on resize to mobile
+      }
+    } else if (!isMobile) {
+      setSidebarOpen(true);
     }
   }, [isMobile]);
 
@@ -25,7 +28,7 @@ const Layout = () => {
 
   return (
     <div className={cn(
-      "flex min-h-screen bg-background overflow-hidden" // Add overflow-hidden
+      "flex min-h-screen bg-background overflow-x-hidden"
     )}>
       <Sidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
       
