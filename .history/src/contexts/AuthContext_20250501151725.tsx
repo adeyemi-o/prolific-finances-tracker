@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase, getCurrentUser, getSession } from "@/lib/supabase";
-import { isSupabaseConfigured } from "@/lib/supabase-client";
 import { toast } from "@/components/ui/use-toast";
 
 type User = {
@@ -46,50 +45,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("AuthContext: useEffect initializing");
     const checkUser = async () => {
-      console.log("AuthContext: Starting to check user session");
-      
-      // Check if Supabase is properly configured
-      if (!isSupabaseConfigured) {
-        console.error("AuthContext: Supabase is not properly configured, missing environment variables");
-        toast({
-          variant: "destructive",
-          title: "Configuration Error",
-          description: "The application is missing required configuration. Please contact support.",
-        });
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      
       try {
         const session = await getSession();
-        console.log("AuthContext: Session check result:", !!session);
         if (session) {
           const currentUser = await getCurrentUser();
-          console.log("AuthContext: Current user check result:", !!currentUser);
           if (currentUser) {
             const role = await getUserRole(currentUser.id);
-            console.log("AuthContext: User role:", role);
             setUser({
               id: currentUser.id,
               email: currentUser.email || '',
               role
             });
           } else {
-            console.log("AuthContext: No current user, setting user to null");
             setUser(null);
           }
         } else {
-          console.log("AuthContext: No session, setting user to null");
           setUser(null);
         }
       } catch (error) {
         console.error("Error checking authentication status:", error);
         setUser(null);
       } finally {
-        console.log("AuthContext: Setting loading to false");
         setLoading(false);
       }
     };
@@ -173,7 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       toast({
         variant: "destructive",
         title: "Logout failed",
-        description: error instanceof Error ? error.message : String(error),
+        description: error instanceof Error ? error.message : "An unknown error occurred.",
       });
     } finally {
       setLoading(false);

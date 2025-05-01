@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase, getCurrentUser, getSession } from "@/lib/supabase";
-import { isSupabaseConfigured } from "@/lib/supabase-client";
 import { toast } from "@/components/ui/use-toast";
 
 type User = {
@@ -46,50 +45,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("AuthContext: useEffect initializing");
     const checkUser = async () => {
-      console.log("AuthContext: Starting to check user session");
-      
-      // Check if Supabase is properly configured
-      if (!isSupabaseConfigured) {
-        console.error("AuthContext: Supabase is not properly configured, missing environment variables");
-        toast({
-          variant: "destructive",
-          title: "Configuration Error",
-          description: "The application is missing required configuration. Please contact support.",
-        });
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      
+      console.log("AuthContext: Starting checkUser()");
       try {
         const session = await getSession();
-        console.log("AuthContext: Session check result:", !!session);
+        console.log("AuthContext: Session check complete", session ? "Session exists" : "No session");
         if (session) {
           const currentUser = await getCurrentUser();
-          console.log("AuthContext: Current user check result:", !!currentUser);
+          console.log("AuthContext: Current user check complete", currentUser ? "User exists" : "No user");
           if (currentUser) {
             const role = await getUserRole(currentUser.id);
-            console.log("AuthContext: User role:", role);
+            console.log("AuthContext: Role retrieved", role);
             setUser({
               id: currentUser.id,
               email: currentUser.email || '',
               role
             });
           } else {
-            console.log("AuthContext: No current user, setting user to null");
             setUser(null);
           }
         } else {
-          console.log("AuthContext: No session, setting user to null");
           setUser(null);
         }
       } catch (error) {
         console.error("Error checking authentication status:", error);
         setUser(null);
       } finally {
-        console.log("AuthContext: Setting loading to false");
+        console.log("AuthContext: Finished checkUser(), setting loading=false");
         setLoading(false);
       }
     };

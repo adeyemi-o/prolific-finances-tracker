@@ -144,12 +144,12 @@ const UserManagement = () => {
       });
       
       form.reset();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding user:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "There was a problem adding the user.",
+        description: error.message || "There was a problem adding the user.",
       });
     }
   };
@@ -163,12 +163,12 @@ const UserManagement = () => {
         title: "User Removed",
         description: "The user has been removed from the system.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting user:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete user.",
+        description: error.message || "Failed to delete user.",
       });
     }
   };

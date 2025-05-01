@@ -49,20 +49,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     console.log("AuthContext: useEffect initializing");
     const checkUser = async () => {
       console.log("AuthContext: Starting to check user session");
-      
-      // Check if Supabase is properly configured
-      if (!isSupabaseConfigured) {
-        console.error("AuthContext: Supabase is not properly configured, missing environment variables");
-        toast({
-          variant: "destructive",
-          title: "Configuration Error",
-          description: "The application is missing required configuration. Please contact support.",
-        });
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      
       try {
         const session = await getSession();
         console.log("AuthContext: Session check result:", !!session);

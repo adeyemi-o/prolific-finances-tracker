@@ -198,21 +198,22 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
                 )}>Reports</span>
               </NavLink>
               
-              {/* Always show User Management menu for all users */}
-              <NavLink 
-                to="/user-management" 
-                className={({ isActive }) => cn(
-                  "nav-item group",
-                  isActive && "nav-item-active"
-                )}
-                onClick={isMobile ? onToggle : undefined}
-              >
-                <Users className="nav-item-icon" />
-                <span className={cn(
-                  "nav-item-text",
-                  (!isMobile && !isOpen) && "nav-item-text-collapsed"
-                )}>User Management</span>
-              </NavLink>
+              {!loading && user?.role === 'Admin' && (
+                <NavLink 
+                  to="/user-management" 
+                  className={({ isActive }) => cn(
+                    "nav-item group",
+                    isActive && "nav-item-active"
+                  )}
+                  onClick={isMobile ? onToggle : undefined}
+                >
+                  <Users className="nav-item-icon" />
+                  <span className={cn(
+                    "nav-item-text",
+                    (!isMobile && !isOpen) && "nav-item-text-collapsed"
+                  )}>User Management</span>
+                </NavLink>
+              )}
             </nav>
           </div>
           

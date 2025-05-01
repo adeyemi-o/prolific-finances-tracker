@@ -4,10 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { SidebarProvider } from "./components/ui/sidebar";
-import { ThemeProvider } from "./components/ThemeProvider";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-
 // Lazy load page components
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
 const Transactions = React.lazy(() => import("./pages/Transactions"));
@@ -16,6 +12,9 @@ const UserManagement = React.lazy(() => import("./pages/UserManagement"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const Login = React.lazy(() => import("./pages/Login"));
 const Layout = React.lazy(() => import("./components/Layout")); // Also lazy load Layout
+import { SidebarProvider } from "./components/ui/sidebar";
+import { ThemeProvider } from "./components/ThemeProvider";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
@@ -85,21 +84,21 @@ const AppRoutes = () => {
 };
 
 const App = () => (
-  <BrowserRouter>
-    <ThemeProvider defaultTheme="dark">
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <AuthProvider>
-            <SidebarProvider>
+  <ThemeProvider defaultTheme="dark">
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
+          <SidebarProvider>
+            <BrowserRouter>
               <AppRoutes />
-            </SidebarProvider>
-          </AuthProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
-  </BrowserRouter>
+            </BrowserRouter>
+          </SidebarProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase, getCurrentUser, getSession } from "@/lib/supabase";
-import { isSupabaseConfigured } from "@/lib/supabase-client";
 import { toast } from "@/components/ui/use-toast";
 
 type User = {
@@ -20,25 +19,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Fetch user role from user_roles table with error logging
 const getUserRole = async (userId: string): Promise<string> => {
-  try {
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .single();
-    if (error) {
-      console.error("Error fetching user role from user_roles table:", error);
-      return "User";
-    }
-    if (!data) {
-      console.warn("No user_roles entry found for user:", userId);
-      return "User";
-    }
-    return data.role || "User";
-  } catch (err) {
-    console.error("Exception in getUserRole:", err);
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .single();
+  if (error) {
+    console.error("Error fetching user role from user_roles table:", error);
     return "User";
   }
+  if (!data) {
+    console.warn("No user_roles entry found for user:", userId);
+    return "User";
+  }
+  return data.role || "User";
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -46,50 +40,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("AuthContext: useEffect initializing");
     const checkUser = async () => {
-      console.log("AuthContext: Starting to check user session");
-      
-      // Check if Supabase is properly configured
-      if (!isSupabaseConfigured) {
-        console.error("AuthContext: Supabase is not properly configured, missing environment variables");
-        toast({
-          variant: "destructive",
-          title: "Configuration Error",
-          description: "The application is missing required configuration. Please contact support.",
-        });
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      
       try {
         const session = await getSession();
-        console.log("AuthContext: Session check result:", !!session);
         if (session) {
           const currentUser = await getCurrentUser();
-          console.log("AuthContext: Current user check result:", !!currentUser);
           if (currentUser) {
             const role = await getUserRole(currentUser.id);
-            console.log("AuthContext: User role:", role);
             setUser({
               id: currentUser.id,
               email: currentUser.email || '',
               role
             });
-          } else {
-            console.log("AuthContext: No current user, setting user to null");
-            setUser(null);
           }
-        } else {
-          console.log("AuthContext: No session, setting user to null");
-          setUser(null);
         }
       } catch (error) {
         console.error("Error checking authentication status:", error);
-        setUser(null);
       } finally {
-        console.log("AuthContext: Setting loading to false");
         setLoading(false);
       }
     };
@@ -113,7 +80,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         } catch (error) {
           console.error("Error in auth state change handler:", error);
-          setUser(null);
         } finally {
           setLoading(false);
         }
@@ -144,16 +110,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           title: "Login successful",
           description: "Welcome to Prolific Homecare Financial Tracker.",
         });
-      } else {
-        setUser(null);
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error instanceof Error ? error.message : "Invalid email or password.",
+        description: error.message || "Invalid email or password.",
       });
-      setUser(null);
       throw error;
     } finally {
       setLoading(false);
@@ -169,11 +132,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Logout successful",
         description: "You have been logged out.",
       });
-    } catch (error: unknown) {
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Logout failed",
-        description: error instanceof Error ? error.message : String(error),
+        description: error.message,
       });
     } finally {
       setLoading(false);

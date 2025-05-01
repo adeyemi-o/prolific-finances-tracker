@@ -36,7 +36,6 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getTransactionsByDateRange } from "@/lib/supabase-transactions";
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 // Define the structure of a transaction based on Supabase schema
 interface Transaction {
@@ -176,8 +175,8 @@ const Reports = () => {
       tx.category,
       tx.amount.toLocaleString('en-US', { style: 'currency', currency: 'USD' })
     ]);
-    const y = 30;
-    autoTable(doc, {
+    let y = 30;
+    doc.autoTable({
       head: [headers],
       body: rows,
       startY: y,
