@@ -111,26 +111,18 @@
   }
 
   body {
+    /* Consolidated body styles */
     @apply bg-background text-foreground min-h-screen antialiased;
     overflow-x: hidden; /* Prevent horizontal scrollbar */
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  html {
     font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  body {
-    @apply bg-background text-foreground;
+  * {
+    @apply border-border;
   }
-  
+
   /* Improve focus states for accessibility */
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
