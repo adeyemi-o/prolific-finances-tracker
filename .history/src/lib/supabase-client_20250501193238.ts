@@ -24,7 +24,7 @@ if (!supabaseKey) {
 // Create a flag to check if Supabase is properly configured
 export const isSupabaseConfigured = !!(supabaseUrl && supabaseKey);
 
-// Initialize the Supabase client with standard options - no custom fetch
+// Initialize the Supabase client with specific options to improve reliability
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder-url.supabase.co', 
   supabaseKey || 'placeholder-key',
@@ -33,6 +33,14 @@ export const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false // Set to false to avoid potential URL parsing issues
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 1 // Reduce realtime events to avoid potential performance issues
+      }
+    },
+    db: {
+      schema: 'public'
     },
     global: {
       headers: {

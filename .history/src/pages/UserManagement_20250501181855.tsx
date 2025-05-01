@@ -42,8 +42,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { getUsers, deleteUser, createUser } from "@/lib/supabase";
-import { supabase } from "@/lib/supabase-client";
+import { getUsers, deleteUser } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Form schema for adding users - admin only
@@ -120,19 +119,39 @@ const UserManagement = () => {
   // Function to add user securely - calling our Edge Function instead of direct admin API
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Don't try to set isSubmitting directly, react-hook-form handles this
+      // Set loading state for button feedback
+      form.formState.isSubmitting = true;
       
       // Call our secure Edge Function for user creation
-      const result = await createUser({
-        email: values.email,
-        password: values.password,
-        role: values.role,
-        name: values.name
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // User's JWT token for auth (must have appropriate permissions)
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          },
+          body: JSON.stringify({
+            email: values.email,
+            password: values.password,
+            role: values.role,
+            name: values.name
+          })
+        }
+      );
 
+      // Handle errors from the API
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create user');
+      }
+      
+      const data = await response.json();
+      
       // Add to local state 
       const newUser = {
-        id: result.user?.id || Date.now().toString(),
+        id: data.user.id,
         name: values.name,
         email: values.email,
         role: values.role,

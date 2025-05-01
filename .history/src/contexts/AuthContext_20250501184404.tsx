@@ -16,7 +16,6 @@ interface AuthContextType {
   logout: () => Promise<void>;
 }
 
-// Create the context with a more explicit undefined type assertion
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Fetch user role from user_roles table with error logging
@@ -42,7 +41,6 @@ const getUserRole = async (userId: string): Promise<string> => {
   }
 };
 
-// Export the AuthProvider component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -136,12 +134,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error("Supabase configuration is missing. Please check your environment variables.");
       }
       
+      // Log authentication attempt (for debugging)
       console.log("Attempting login with Supabase...");
       
-      // Simple direct login with Supabase - no extra wrappers
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
       });
       
       if (error) {
@@ -149,54 +147,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw error;
       }
       
-      if (data?.user) {
-        console.log("Login successful, processing user data...");
-        // Get user role
+      if (data.user) {
+        console.log("Login successful, user ID:", data.user.id);
         const role = await getUserRole(data.user.id);
-        console.log("Setting user state with role:", role);
-        
         setUser({
           id: data.user.id,
           email: data.user.email || '',
           role
         });
-        
         toast({
           title: "Login successful",
           description: "Welcome to Prolific Homecare Financial Tracker.",
         });
       } else {
-        console.warn("Login returned success but no user data");
+        console.warn("Login returned no user data");
         setUser(null);
-        throw new Error("Authentication succeeded but no user data was returned.");
       }
     } catch (error: unknown) {
-      console.error("Login process failed:", error);
-      
-      // Provide more specific error messages based on the error type
-      let errorMessage = "Invalid email or password.";
-      
-      if (error instanceof Error) {
-        if (error.message.includes("Failed to fetch") || error.message.includes("network")) {
-          errorMessage = "Connection to authentication server failed. Please check your internet connection and try again.";
-        } else if (error.message.includes("Invalid login credentials")) {
-          errorMessage = "Invalid email or password. Please check your credentials and try again.";
-        } else if (error.message.includes("rate limited")) {
-          errorMessage = "Too many login attempts. Please try again later.";
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      
+      console.error("Login failed:", error);
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: errorMessage,
+        description: error instanceof Error ? error.message : "Invalid email or password.",
       });
-      
       setUser(null);
+      throw error;
     } finally {
-      console.log("Login attempt finished, resetting loading state");
       setLoading(false);
     }
   };
@@ -229,13 +205,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
+};
 
-// Create a separate function for useAuth hook
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
+};

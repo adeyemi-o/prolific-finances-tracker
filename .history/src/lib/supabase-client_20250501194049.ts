@@ -24,7 +24,27 @@ if (!supabaseKey) {
 // Create a flag to check if Supabase is properly configured
 export const isSupabaseConfigured = !!(supabaseUrl && supabaseKey);
 
-// Initialize the Supabase client with standard options - no custom fetch
+// Custom fetch implementation that includes credentials
+const customFetch = (url: RequestInfo | URL, options?: RequestInit) => {
+  console.log(`Making request to: ${typeof url === 'string' ? url.split('?')[0] : 'URL object'}`);
+  
+  // Add credentials and longer timeout
+  const fetchOptions: RequestInit = {
+    ...options,
+    credentials: 'include',
+    mode: 'cors',
+    cache: 'no-cache',
+    headers: {
+      ...options?.headers,
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    }
+  };
+  
+  return fetch(url, fetchOptions);
+};
+
+// Initialize the Supabase client with specific options to improve reliability
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder-url.supabase.co', 
   supabaseKey || 'placeholder-key',
@@ -32,12 +52,16 @@ export const supabase = createClient(
     auth: {
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: false // Set to false to avoid potential URL parsing issues
+      detectSessionInUrl: false, // Set to false to avoid potential URL parsing issues
+      storageKey: 'prolific-finances-auth-token' // Custom storage key to avoid conflicts
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 1 // Reduce realtime events to avoid potential performance issues
+      }
     },
     global: {
-      headers: {
-        'x-application-name': 'prolific-finances-tracker'
-      }
+      fetch: customFetch // Use our custom fetch implementation
     }
   }
 );

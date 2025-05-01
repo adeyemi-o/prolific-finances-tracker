@@ -136,67 +136,63 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error("Supabase configuration is missing. Please check your environment variables.");
       }
       
+      // Log authentication attempt (for debugging)
       console.log("Attempting login with Supabase...");
       
-      // Simple direct login with Supabase - no extra wrappers
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Wrap the Supabase call in a timeout to prevent hanging
+      const loginPromise = new Promise<any>(async (resolve, reject) => {
+        try {
+          console.log("Calling supabase.auth.signInWithPassword...");
+          const result = await supabase.auth.signInWithPassword({ 
+            email, 
+            password 
+          });
+          console.log("Supabase auth call completed", result);
+          resolve(result);
+        } catch (err) {
+          console.error("Error in login promise:", err);
+          reject(err);
+        }
       });
+      
+      // Add a timeout to the promise to prevent hanging indefinitely
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Login timed out. Please try again.")), 10000);
+      });
+      
+      // Race the promises to handle timeout
+      const { data, error } = await Promise.race([loginPromise, timeoutPromise]) as any;
       
       if (error) {
         console.error("Supabase login error:", error);
         throw error;
       }
       
-      if (data?.user) {
-        console.log("Login successful, processing user data...");
-        // Get user role
+      if (data.user) {
+        console.log("Login successful, user ID:", data.user.id);
         const role = await getUserRole(data.user.id);
-        console.log("Setting user state with role:", role);
-        
         setUser({
           id: data.user.id,
           email: data.user.email || '',
           role
         });
-        
         toast({
           title: "Login successful",
           description: "Welcome to Prolific Homecare Financial Tracker.",
         });
       } else {
-        console.warn("Login returned success but no user data");
+        console.warn("Login returned no user data");
         setUser(null);
-        throw new Error("Authentication succeeded but no user data was returned.");
       }
     } catch (error: unknown) {
-      console.error("Login process failed:", error);
-      
-      // Provide more specific error messages based on the error type
-      let errorMessage = "Invalid email or password.";
-      
-      if (error instanceof Error) {
-        if (error.message.includes("Failed to fetch") || error.message.includes("network")) {
-          errorMessage = "Connection to authentication server failed. Please check your internet connection and try again.";
-        } else if (error.message.includes("Invalid login credentials")) {
-          errorMessage = "Invalid email or password. Please check your credentials and try again.";
-        } else if (error.message.includes("rate limited")) {
-          errorMessage = "Too many login attempts. Please try again later.";
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      
+      console.error("Login failed:", error);
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: errorMessage,
+        description: error instanceof Error ? error.message : "Invalid email or password.",
       });
-      
       setUser(null);
     } finally {
-      console.log("Login attempt finished, resetting loading state");
       setLoading(false);
     }
   };

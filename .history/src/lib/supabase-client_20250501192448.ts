@@ -24,19 +24,35 @@ if (!supabaseKey) {
 // Create a flag to check if Supabase is properly configured
 export const isSupabaseConfigured = !!(supabaseUrl && supabaseKey);
 
-// Initialize the Supabase client with standard options - no custom fetch
+// Initialize the Supabase client with empty strings as fallbacks to prevent runtime errors
+// Add custom fetch options with longer timeout
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder-url.supabase.co', 
   supabaseKey || 'placeholder-key',
   {
     auth: {
-      autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: false // Set to false to avoid potential URL parsing issues
+      autoRefreshToken: true,
+      detectSessionInUrl: true
     },
     global: {
-      headers: {
-        'x-application-name': 'prolific-finances-tracker'
+      fetch: (...args) => {
+        // Create a custom fetch with a longer timeout (30 seconds)
+        return new Promise((resolve, reject) => {
+          const timeoutId = setTimeout(() => {
+            reject(new Error('Supabase request timed out after 30 seconds'));
+          }, 30000);
+          
+          fetch(...args)
+            .then(response => {
+              clearTimeout(timeoutId);
+              resolve(response);
+            })
+            .catch(error => {
+              clearTimeout(timeoutId);
+              reject(error);
+            });
+        });
       }
     }
   }

@@ -84,7 +84,6 @@ const Login = () => {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       aria-label="Email" // Added aria-label for accessibility
-                      autoComplete="email" // Add autocomplete attribute
                     />
                   </div>
                 </div>

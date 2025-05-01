@@ -24,20 +24,8 @@ if (!supabaseKey) {
 // Create a flag to check if Supabase is properly configured
 export const isSupabaseConfigured = !!(supabaseUrl && supabaseKey);
 
-// Initialize the Supabase client with standard options - no custom fetch
+// Initialize the Supabase client with empty strings as fallbacks to prevent runtime errors
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder-url.supabase.co', 
-  supabaseKey || 'placeholder-key',
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: false // Set to false to avoid potential URL parsing issues
-    },
-    global: {
-      headers: {
-        'x-application-name': 'prolific-finances-tracker'
-      }
-    }
-  }
+  supabaseKey || 'placeholder-key'
 );

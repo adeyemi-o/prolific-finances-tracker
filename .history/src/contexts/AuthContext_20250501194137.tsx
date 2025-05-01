@@ -138,38 +138,86 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       console.log("Attempting login with Supabase...");
       
-      // Simple direct login with Supabase - no extra wrappers
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Direct login implementation with retries
+      let loginAttempts = 0;
+      let error = null;
       
-      if (error) {
-        console.error("Supabase login error:", error);
-        throw error;
+      while (loginAttempts < 3) {
+        try {
+          loginAttempts++;
+          console.log(`Login attempt ${loginAttempts}...`);
+          
+          // Clear local storage to prevent potential token conflicts
+          if (loginAttempts > 1) {
+            console.log("Clearing browser storage to prevent token conflicts...");
+            localStorage.removeItem('prolific-finances-auth-token');
+            sessionStorage.clear();
+          }
+          
+          // Use a shorter timeout for faster feedback
+          const loginPromise = supabase.auth.signInWithPassword({ email, password });
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Request timeout")), 8000)
+          );
+          
+          // Race between the login attempt and timeout
+          const response = await Promise.race([loginPromise, timeoutPromise]);
+          
+          // Check if we have a valid response
+          if (response && 'data' in response && response.data && response.data.user) {
+            console.log("Login successful, processing user data...");
+            const data = response.data;
+            
+            // Get user role
+            console.log("User authenticated, fetching role...");
+            const role = await getUserRole(data.user.id);
+            console.log("Setting user state with role:", role);
+            
+            setUser({
+              id: data.user.id,
+              email: data.user.email || '',
+              role
+            });
+            
+            toast({
+              title: "Login successful",
+              description: "Welcome to Prolific Homecare Financial Tracker.",
+            });
+            
+            console.log("Login process completed successfully");
+            return; // Exit function on success
+          } else if (response && 'error' in response && response.error) {
+            error = response.error;
+            console.error("Login error:", error);
+            throw error;
+          } else {
+            error = new Error("Invalid response from authentication server");
+            console.error("Invalid response structure:", response);
+            throw error;
+          }
+        } catch (e) {
+          error = e;
+          console.warn(`Login attempt ${loginAttempts} failed:`, e);
+          
+          // If it's not a timeout error, don't retry
+          if (e instanceof Error && !e.message.includes('timeout')) {
+            console.error("Non-timeout error, not retrying:", e);
+            throw e;
+          }
+          
+          if (loginAttempts < 3) {
+            console.log(`Waiting before retry attempt ${loginAttempts + 1}...`);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between retries
+          } else {
+            console.error("All login retry attempts failed");
+            throw e;
+          }
+        }
       }
       
-      if (data?.user) {
-        console.log("Login successful, processing user data...");
-        // Get user role
-        const role = await getUserRole(data.user.id);
-        console.log("Setting user state with role:", role);
-        
-        setUser({
-          id: data.user.id,
-          email: data.user.email || '',
-          role
-        });
-        
-        toast({
-          title: "Login successful",
-          description: "Welcome to Prolific Homecare Financial Tracker.",
-        });
-      } else {
-        console.warn("Login returned success but no user data");
-        setUser(null);
-        throw new Error("Authentication succeeded but no user data was returned.");
-      }
+      // If we got here, all retries failed
+      throw error || new Error("Login failed after multiple attempts");
+      
     } catch (error: unknown) {
       console.error("Login process failed:", error);
       
@@ -177,8 +225,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       let errorMessage = "Invalid email or password.";
       
       if (error instanceof Error) {
-        if (error.message.includes("Failed to fetch") || error.message.includes("network")) {
-          errorMessage = "Connection to authentication server failed. Please check your internet connection and try again.";
+        if (error.message.includes("timeout") || error.message.includes("network")) {
+          errorMessage = "Connection to authentication server timed out. Please check your internet connection and try again.";
         } else if (error.message.includes("Invalid login credentials")) {
           errorMessage = "Invalid email or password. Please check your credentials and try again.";
         } else if (error.message.includes("rate limited")) {

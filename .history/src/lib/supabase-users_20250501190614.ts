@@ -1,7 +1,7 @@
 import { supabase } from './supabase-client';
 
 /**
- * Gets all users by fetching from our secure database function
+ * Gets all users by fetching the auth metadata from a public view
  * @returns Array of users
  */
 export const getUsers = async () => {
@@ -13,20 +13,25 @@ export const getUsers = async () => {
       return [];
     }
 
-    // Call the secure database function we created
+    // Get the current user to check permissions
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (!currentUser?.user?.user_metadata?.role === 'Admin') {
+      console.warn("User does not have admin permissions");
+      return [];
+    }
+
+    // Use a public view instead of direct admin access
     const { data: users, error } = await supabase
-      .rpc('get_users_with_permission');
+      .from('users_view')  // This would be a view you create that shows limited user info
+      .select('*');
     
     if (error) {
-      console.error("Error fetching users:", error);
       throw error;
     }
     
-    // If no users returned, fallback to just the current user
+    // If the users_view doesn't exist yet, we use session data as a fallback 
+    // to at least show the current user
     if (!users || users.length === 0) {
-      const { data: currentUser } = await supabase.auth.getUser();
-      if (!currentUser?.user) return [];
-      
       return [{
         id: currentUser.user.id,
         email: currentUser.user.email,

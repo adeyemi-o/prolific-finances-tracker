@@ -1,46 +1,35 @@
 import { supabase } from './supabase-client';
 
 /**
- * Gets all users by fetching from our secure database function
+ * Gets all users
  * @returns Array of users
  */
 export const getUsers = async () => {
   try {
-    // First, check if the user has a valid session
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.session) {
-      console.error("No valid session found");
-      return [];
-    }
-
-    // Call the secure database function we created
-    const { data: users, error } = await supabase
-      .rpc('get_users_with_permission');
+    // For regular users, we'll use a more secure approach by fetching from user_profiles table
+    // which doesn't require admin privileges
+    const { data: profiles, error: profilesError } = await supabase
+      .from('user_profiles')
+      .select('id, email, user_metadata, created_at, last_sign_in_at');
     
-    if (error) {
-      console.error("Error fetching users:", error);
-      throw error;
+    if (profilesError) {
+      console.error("Error fetching user profiles:", profilesError);
+      throw profilesError;
     }
     
-    // If no users returned, fallback to just the current user
-    if (!users || users.length === 0) {
-      const { data: currentUser } = await supabase.auth.getUser();
-      if (!currentUser?.user) return [];
-      
-      return [{
-        id: currentUser.user.id,
-        email: currentUser.user.email,
-        user_metadata: currentUser.user.user_metadata,
-        created_at: currentUser.user.created_at,
-        last_sign_in_at: currentUser.user.last_sign_in_at,
-        email_confirmed_at: currentUser.user.email_confirmed_at
-      }];
-    }
-    
-    return users;
+    // Format the profiles to match the expected structure
+    return profiles.map(profile => ({
+      id: profile.id,
+      email: profile.email,
+      user_metadata: profile.user_metadata,
+      created_at: profile.created_at,
+      last_sign_in_at: profile.last_sign_in_at,
+      email_confirmed_at: profile.created_at // We don't have this info but need it for the UI
+    }));
   } catch (error) {
     console.error("Error in getUsers:", error);
-    // Return an empty array as fallback
+    
+    // Fallback to empty array if there's an error
     return [];
   }
 };
@@ -89,18 +78,24 @@ export const createUser = async (user: {
 };
 
 /**
- * Updates a user status (pseudo-delete)
+ * Deletes a user via Edge Function
  * @param id User ID
  * @returns True if successful
  */
 export const deleteUser = async (id: string) => {
+  // For deleting users, we'll need to create another edge function
+  // For now, we'll just update their status in the user_profiles table
+  
   try {
-    // We can't actually delete users from auth.users without admin access,
-    // so instead we'll just remove their access by disabling their account
-    // via our Edge Function
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({ status: 'inactive' })
+      .eq('id', id);
     
-    // For now, fake success response
-    console.log(`User ${id} would be disabled (not actually implemented yet)`);
+    if (error) {
+      throw error;
+    }
+    
     return true;
   } catch (error) {
     console.error("Error in deleteUser:", error);

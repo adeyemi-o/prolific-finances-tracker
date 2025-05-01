@@ -131,27 +131,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
       
+      // Clear any existing session first to prevent conflicts
+      console.log("Clearing any existing session...");
+      await supabase.auth.signOut();
+      
       // Double-check that Supabase is configured
       if (!isSupabaseConfigured) {
         throw new Error("Supabase configuration is missing. Please check your environment variables.");
       }
       
+      // Log authentication attempt
       console.log("Attempting login with Supabase...");
       
-      // Simple direct login with Supabase - no extra wrappers
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Use a traditional promise with explicit error handling
+      const result = await new Promise((resolve, reject) => {
+        // Set a timeout for the entire login process
+        const timeout = setTimeout(() => {
+          reject(new Error("Login request timed out. Server may be unavailable or network issues."));
+        }, 15000);
+        
+        // Attempt the login
+        supabase.auth.signInWithPassword({ email, password })
+          .then(response => {
+            clearTimeout(timeout);
+            if (response.error) {
+              reject(response.error);
+            } else {
+              resolve(response.data);
+            }
+          })
+          .catch(err => {
+            clearTimeout(timeout);
+            reject(err);
+          });
       });
       
-      if (error) {
-        console.error("Supabase login error:", error);
-        throw error;
-      }
+      // TypeScript casting for the result
+      const data = result as { user: any, session: any };
+      console.log("Login successful, processing user data...");
       
-      if (data?.user) {
-        console.log("Login successful, processing user data...");
-        // Get user role
+      if (data.user) {
+        console.log("User authenticated, fetching role...");
         const role = await getUserRole(data.user.id);
         console.log("Setting user state with role:", role);
         
@@ -165,6 +185,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           title: "Login successful",
           description: "Welcome to Prolific Homecare Financial Tracker.",
         });
+        console.log("Login process completed successfully");
       } else {
         console.warn("Login returned success but no user data");
         setUser(null);
@@ -177,8 +198,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       let errorMessage = "Invalid email or password.";
       
       if (error instanceof Error) {
-        if (error.message.includes("Failed to fetch") || error.message.includes("network")) {
-          errorMessage = "Connection to authentication server failed. Please check your internet connection and try again.";
+        if (error.message.includes("timeout") || error.message.includes("network")) {
+          errorMessage = "Connection to authentication server timed out. Please check your internet connection and try again.";
         } else if (error.message.includes("Invalid login credentials")) {
           errorMessage = "Invalid email or password. Please check your credentials and try again.";
         } else if (error.message.includes("rate limited")) {
