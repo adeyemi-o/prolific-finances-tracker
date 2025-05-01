@@ -590,12 +590,7 @@ const Dashboard = () => {
               )}
             </div>
             <div className="mt-4 sm:hidden">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full transition-all duration-200 hover:bg-accent"
-                onClick={() => navigate("/transactions")}
-              >
+              <Button variant="outline" size="sm" className="w-full transition-all duration-200 hover:bg-accent">
                 View All Transactions <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
