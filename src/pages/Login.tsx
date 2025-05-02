@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react"; // Added useEffect
-import { useNavigate } from "react-router-dom";
+
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,35 +13,43 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Add debugging effect to check environment variables
   useEffect(() => {
-    console.log("Environment variables check:");
-    console.log("VITE_SUPABASE_URL exists:", !!import.meta.env.VITE_SUPABASE_URL);
-    console.log("VITE_SUPABASE_ANON_KEY exists:", !!import.meta.env.VITE_SUPABASE_ANON_KEY);
-    
-    // Log first few characters of URL for verification
-    if (import.meta.env.VITE_SUPABASE_URL) {
-      console.log("URL starts with:", import.meta.env.VITE_SUPABASE_URL.substring(0, 15) + "...");
+    // If user is already logged in, redirect to intended destination or home
+    if (user) {
+      const from = location.state?.from?.pathname || "/";
+      navigate(from, { replace: true });
     }
-  }, []);
+  }, [user, navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      console.log("Attempting login...");
       await login(email, password);
-      navigate("/");
+      
+      // Success toast
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
+
+      // Navigation will be handled by the useEffect above
     } catch (error) {
       console.error("Login error:", error);
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error instanceof Error ? error.message : "Invalid email or password.",
+        description: error instanceof Error 
+          ? error.message 
+          : "Please check your credentials and try again.",
       });
+      setPassword(""); // Clear password on error
     } finally {
       setIsLoading(false);
     }
@@ -85,6 +94,7 @@ const Login = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      disabled={isLoading}
                       aria-label="Email"
                       autoComplete="email"
                     />
@@ -102,6 +112,7 @@ const Login = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      disabled={isLoading}
                       aria-label="Password"
                       autoComplete="current-password"
                     />
@@ -109,8 +120,12 @@ const Login = () => {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Logging in..." : "Sign in"}
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={isLoading || !email || !password}
+                >
+                  {isLoading ? "Signing in..." : "Sign in"}
                 </Button>
               </CardFooter>
             </form>
