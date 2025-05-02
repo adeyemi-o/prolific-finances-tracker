@@ -60,50 +60,61 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     console.log("AuthContext: useEffect initializing");
+    let mounted = true;
+    
     const checkUser = async () => {
       console.log("AuthContext: Starting to check user session");
       
-      // Check if Supabase is properly configured
       if (!isSupabaseConfigured) {
-        console.error("AuthContext: Supabase is not properly configured, missing environment variables");
+        console.error("AuthContext: Supabase is not properly configured");
         toast({
           variant: "destructive",
           title: "Configuration Error",
           description: "The application is missing required configuration. Please contact support.",
         });
-        setUser(null);
-        setLoading(false);
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
         return;
       }
       
       try {
         const session = await getSession();
         console.log("AuthContext: Session check result:", !!session);
+        
+        if (!mounted) return;
+
         if (session) {
           const currentUser = await getCurrentUser();
           console.log("AuthContext: Current user check result:", !!currentUser);
+          
+          if (!mounted) return;
+          
           if (currentUser) {
             const role = await getUserRole(currentUser.id);
             console.log("AuthContext: User role:", role);
-            setUser({
-              id: currentUser.id,
-              email: currentUser.email || '',
-              role
-            });
+            if (mounted) {
+              setUser({
+                id: currentUser.id,
+                email: currentUser.email || '',
+                role
+              });
+            }
           } else {
-            console.log("AuthContext: No current user, setting user to null");
-            setUser(null);
+            if (mounted) setUser(null);
           }
         } else {
-          console.log("AuthContext: No session, setting user to null");
-          setUser(null);
+          if (mounted) setUser(null);
         }
       } catch (error) {
         console.error("Error checking authentication status:", error);
-        setUser(null);
+        if (mounted) setUser(null);
       } finally {
-        console.log("AuthContext: Setting loading to false");
-        setLoading(false);
+        if (mounted) {
+          console.log("AuthContext: Setting loading to false");
+          setLoading(false);
+        }
       }
     };
 
@@ -134,6 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     return () => {
+      mounted = false;
       authListener?.subscription?.unsubscribe();
     };
   }, []);
