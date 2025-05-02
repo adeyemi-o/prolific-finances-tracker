@@ -63,16 +63,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let mounted = true;
     
     const checkUser = async () => {
+      if (!mounted) return;
       console.log("AuthContext: Starting to check user session");
       
       if (!isSupabaseConfigured) {
         console.error("AuthContext: Supabase is not properly configured");
-        toast({
-          variant: "destructive",
-          title: "Configuration Error",
-          description: "The application is missing required configuration. Please contact support.",
-        });
         if (mounted) {
+          toast({
+            variant: "destructive",
+            title: "Configuration Error",
+            description: "The application is missing required configuration. Please contact support.",
+          });
           setUser(null);
           setLoading(false);
         }
@@ -123,23 +124,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
         try {
+          console.log("Auth state changed:", event);
           if (event === "SIGNED_IN" && session) {
             const user = session.user;
             const role = await getUserRole(user.id);
-            setUser({
-              id: user.id,
-              email: user.email || '',
-              role
-            });
-          } else if (event === "SIGNED_OUT") {
-            setUser(null);
+            if (mounted) {
+              setUser({
+                id: user.id,
+                email: user.email || '',
+                role
+              });
+            }
+          } else if (event === "SIGNED_OUT" || event === "USER_DELETED") {
+            if (mounted) {
+              setUser(null);
+            }
           }
         } catch (error) {
           console.error("Error in auth state change handler:", error);
-          setUser(null);
+          if (mounted) {
+            setUser(null);
+          }
         } finally {
-          setLoading(false);
+          if (mounted) {
+            setLoading(false);
+          }
         }
       }
     );
