@@ -1,15 +1,4 @@
-
 import { supabase } from './supabase-client';
-
-/**
- * Helper function to capitalize the first letter of a string
- * @param str The string to capitalize
- * @returns The capitalized string
- */
-const capitalizeFirstLetter = (str: string): string => {
-  if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-};
 
 /**
  * Gets all users by fetching from our secure database function
@@ -38,36 +27,17 @@ export const getUsers = async () => {
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser?.user) return [];
       
-      // Format the current user with capitalized role
-      const userRole = currentUser.user.user_metadata?.role || 'User';
-      
       return [{
         id: currentUser.user.id,
         email: currentUser.user.email,
-        user_metadata: {
-          ...currentUser.user.user_metadata,
-          role: capitalizeFirstLetter(userRole)
-        },
+        user_metadata: currentUser.user.user_metadata,
         created_at: currentUser.user.created_at,
         last_sign_in_at: currentUser.user.last_sign_in_at,
         email_confirmed_at: currentUser.user.email_confirmed_at
       }];
     }
     
-    // Process all users and normalize roles
-    return users.map(user => {
-      // Get the role from user_metadata or default to 'User'
-      const role = user.user_metadata?.role || 'User';
-      
-      // Return user with properly capitalized role
-      return {
-        ...user,
-        user_metadata: {
-          ...user.user_metadata,
-          role: capitalizeFirstLetter(role)
-        }
-      };
-    });
+    return users;
   } catch (error) {
     console.error("Error in getUsers:", error);
     // Return an empty array as fallback
@@ -87,9 +57,6 @@ export const createUser = async (user: {
   name?: string; 
 }) => {
   try {
-    // Ensure role is properly capitalized when creating a user
-    const role = capitalizeFirstLetter(user.role);
-    
     // Call our secure Edge Function
     const response = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
@@ -102,7 +69,7 @@ export const createUser = async (user: {
         body: JSON.stringify({
           email: user.email,
           password: user.password,
-          role: role,
+          role: user.role,
           name: user.name || user.email.split('@')[0]
         })
       }
@@ -163,9 +130,8 @@ export const updateUserMetadata = async (userId: string, metadata: {
 };
 
 /**
- * Updates roles for all users that don't have a role set or have inconsistent roles
- * between user_roles table and user_metadata
- * @param defaultRole The default role to set if not present in user_roles
+ * Updates roles for all users that don't have a role set
+ * @param defaultRole The default role to set if not present
  * @returns Number of users updated
  */
 export const ensureUserRoles = async (defaultRole: string = 'Standard User') => {
@@ -174,29 +140,10 @@ export const ensureUserRoles = async (defaultRole: string = 'Standard User') => 
     let updatedCount = 0;
     
     for (const user of users) {
-      // First fetch the user's role from the user_roles table
-      const { data: userRole, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
-        console.error(`Error fetching role for user ${user.id}:`, error);
-        continue;
-      }
-      
-      // Determine the correct role from the user_roles table or use default
-      const correctRole = userRole?.role || defaultRole;
-      
-      // Check if user metadata role doesn't match the database role or is missing
-      if (!user.user_metadata?.role || 
-          user.user_metadata.role === 'User' || 
-          user.user_metadata.role !== correctRole) {
-        
-        // Update the user metadata to match their role from the database
+      // Check if user has no role or has the legacy 'User' role
+      if (!user.user_metadata?.role || user.user_metadata.role === 'User') {
         await updateUserMetadata(user.id, {
-          role: correctRole
+          role: defaultRole
         });
         updatedCount++;
       }
@@ -225,53 +172,6 @@ export const deleteUser = async (id: string) => {
     return true;
   } catch (error) {
     console.error("Error in deleteUser:", error);
-    throw error;
-  }
-};
-
-/**
- * Force updates a specific user to have admin role
- * @param email Email address of the admin user
- * @returns True if successful
- */
-export const ensureAdminUser = async (email: string) => {
-  try {
-    // First get the user ID for the provided email
-    const { data: users, error: userError } = await supabase
-      .rpc('get_users_with_permission');
-    
-    if (userError) {
-      console.error("Error fetching users:", userError);
-      throw userError;
-    }
-
-    const adminUser = users.find(user => user.email === email);
-    if (!adminUser) {
-      throw new Error(`User with email ${email} not found`);
-    }
-    
-    // Update the user's role in both metadata and the user_roles table
-    await updateUserMetadata(adminUser.id, {
-      role: 'Admin'
-    });
-    
-    // Also update the role in the user_roles table if you have access to it
-    const { error: roleError } = await supabase
-      .from('user_roles')
-      .upsert({ 
-        user_id: adminUser.id, 
-        role: 'Admin' 
-      }, { 
-        onConflict: 'user_id' 
-      });
-    
-    if (roleError) {
-      console.error("Error updating user_roles table:", roleError);
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error ensuring admin user:", error);
     throw error;
   }
 };
