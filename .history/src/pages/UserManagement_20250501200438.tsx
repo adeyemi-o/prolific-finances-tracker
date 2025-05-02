@@ -42,12 +42,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
-import { getUsers, deleteUser, createUser, ensureUserRoles, ensureAdminUser } from "@/lib/supabase-users";
+import { getUsers, deleteUser, createUser } from "@/lib/supabase";
 import { supabase } from "@/lib/supabase-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/contexts/AuthContext"; // Add this import
 
 // Form schema for adding users - admin only
 const formSchema = z.object({
@@ -80,7 +79,6 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [viewType, setViewType] = useState<"table" | "cards">("table");
   const isMobile = useMobile();
-  const { user } = useAuth(); // Get the current logged-in user with role info
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -88,7 +86,7 @@ const UserManagement = () => {
       name: "",
       email: "",
       password: "",
-      role: "Standard User", // Changed from "User" to "Standard User"
+      role: "User",
     },
   });
   
@@ -96,41 +94,16 @@ const UserManagement = () => {
     const loadUsers = async () => {
       try {
         setLoading(true);
-        
-        // Ensure prolifichcs user is set as Admin
-        try {
-          await ensureAdminUser("prolifichcs@gmail.com");
-        } catch (error) {
-          console.error("Error ensuring admin for prolifichcs:", error);
-        }
-        
-        // Then ensure all users have the correct role in their metadata
-        try {
-          const updatedCount = await ensureUserRoles();
-          if (updatedCount > 0) {
-            console.log(`Updated roles for ${updatedCount} users`);
-          }
-        } catch (error) {
-          console.error("Error synchronizing user roles:", error);
-        }
-        
         const loadedUsers = await getUsers();
         
-        const formattedUsers = loadedUsers.map(user => {
-          // Force prolifichcs to always show as Admin in the UI
-          const role = user.email === "prolifichcs@gmail.com" 
-            ? "Admin" 
-            : (user.user_metadata?.role || 'Standard User');
-            
-          return {
-            id: user.id,
-            name: user.user_metadata?.name || user.email?.split('@')[0] || 'Unknown',
-            email: user.email || 'No Email',
-            role: role,
-            status: user.email_confirmed_at ? 'Active' : 'Pending',
-            lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at) : null,
-          };
-        });
+        const formattedUsers = loadedUsers.map(user => ({
+          id: user.id,
+          name: user.user_metadata?.name || user.email?.split('@')[0] || 'Unknown',
+          email: user.email || 'No Email',
+          role: user.user_metadata?.role || 'Standard User', // Changed default from 'User' to 'Standard User'
+          status: user.email_confirmed_at ? 'Active' : 'Pending',
+          lastLogin: user.last_sign_in_at ? new Date(user.last_sign_in_at) : null,
+        }));
         
         setUsers(formattedUsers);
       } catch (error) {
@@ -458,99 +431,82 @@ const UserManagement = () => {
             </div>
           )}
           
-          {/* Only show the Add User form to Admins */}
-          {user?.role === "Admin" ? (
-            <div className="mt-8 border-t pt-8">
-              <h3 className="text-lg font-medium mb-4">Add New User (Admin Only)</h3>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Full Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="John Smith" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input placeholder="user@example.com" type="email" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+          <div className="mt-8 border-t pt-8">
+            <h3 className="text-lg font-medium mb-4">Add New User (Admin Only)</h3>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="John Smith" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Role</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a role" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="Admin">Admin</SelectItem>
-                              <SelectItem value="Standard User">Standard User</SelectItem>
-                              <SelectItem value="Supervisor">Supervisor</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="user@example.com" type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
-                  <Button type="submit" className="w-full md:w-auto">Add User</Button>
-                </form>
-              </Form>
-            </div>
-          ) : (
-            <div className="mt-8 border-t pt-8">
-              <div className="bg-amber-50 p-4 rounded-md border border-amber-200">
-                <h3 className="text-amber-800 font-medium flex items-center gap-2">
-                  <UserRound className="h-4 w-4" />
-                  Admin Access Required
-                </h3>
-                <p className="text-amber-700 text-sm mt-1">
-                  You need administrator privileges to add new users. 
-                  Your current role: <Badge variant="outline">{user?.role || 'Loading...'}</Badge>
-                </p>
-              </div>
-            </div>
-          )}
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a role" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Admin">Admin</SelectItem>
+                            <SelectItem value="User">User</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <Button type="submit" className="w-full md:w-auto">Add User</Button>
+              </form>
+            </Form>
+          </div>
         </CardContent>
       </Card>
     </div>

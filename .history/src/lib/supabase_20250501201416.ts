@@ -24,6 +24,6 @@ export {
   getUsers,
   createUser,
   deleteUser,
-  ensureUserRoles,  
+  ensureUserRoles,
   updateUserMetadata
-} from './supabase-users';
+} from './supabase-users;
