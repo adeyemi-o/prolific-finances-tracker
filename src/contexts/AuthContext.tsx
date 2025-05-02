@@ -40,13 +40,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
     const setupAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (session?.user && mounted) {
+        if (session?.user) {
           const role = await getUserRole(session.user.id);
           setUser({
             id: session.user.id,
@@ -57,39 +55,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (error) {
         console.error("Error in setupAuth:", error);
       } finally {
-        if (mounted) setLoading(false);
+        setLoading(false);
       }
     };
 
+    setupAuth();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
-
-        try {
-          console.log("Auth state changed:", event, session?.user?.id);
-          
-          if (session?.user) {
+        console.log("Auth state changed:", event, "Session:", !!session);
+        
+        if (session?.user) {
+          try {
             const role = await getUserRole(session.user.id);
             setUser({
               id: session.user.id,
               email: session.user.email || '',
               role
             });
-          } else {
-            setUser(null);
+          } catch (error) {
+            console.error("Error in auth state change:", error);
           }
-        } catch (error) {
-          console.error("Error in auth state change:", error);
-        } finally {
-          setLoading(false);
+        } else {
+          setUser(null);
         }
+        setLoading(false);
       }
     );
 
-    setupAuth();
-
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -104,23 +98,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
 
-      if (data.user) {
-        const role = await getUserRole(data.user.id);
-        setUser({
-          id: data.user.id,
-          email: data.user.email || '',
-          role
-        });
+      if (!data.user) {
+        throw new Error("Login successful but no user data received");
       }
+
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         variant: "destructive",
         title: "Login failed",
-        description: error instanceof Error ? error.message : "An error occurred"
+        description: error instanceof Error ? error.message : "Invalid credentials"
       });
       throw error;
-    } finally {
-      setLoading(false);
     }
   };
 
