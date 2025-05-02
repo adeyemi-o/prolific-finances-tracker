@@ -38,25 +38,30 @@ const getUserRole = async (userId: string): Promise<string> => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     let mounted = true;
 
     const initializeAuth = async () => {
       try {
-        console.log("AuthContext: Starting session initialization");
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) throw sessionError;
+        if (!initialized) {
+          console.log("Starting auth initialization...");
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) throw error;
 
-        if (session?.user && mounted) {
-          console.log("Session found, initializing user");
-          const role = await getUserRole(session.user.id);
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            role
-          });
+          if (session?.user && mounted) {
+            const role = await getUserRole(session.user.id);
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              role
+            });
+            console.log("Session restored successfully");
+          }
+          
+          setInitialized(true);
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
@@ -77,23 +82,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state changed:", event, session ? "Session exists" : "No session");
+        console.log("Auth state changed:", event);
         
         if (!mounted) return;
 
-        if (session?.user) {
-          try {
+        try {
+          if (session?.user) {
+            console.log("Processing auth state change with session");
             const role = await getUserRole(session.user.id);
             setUser({
               id: session.user.id,
               email: session.user.email || '',
               role
             });
-          } catch (error) {
-            console.error("Error updating user state:", error);
+          } else {
+            console.log("Clearing user state");
+            setUser(null);
           }
-        } else {
-          setUser(null);
+        } catch (error) {
+          console.error("Error processing auth state change:", error);
         }
       }
     );
@@ -102,7 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [initialized]);
 
   const login = async (email: string, password: string) => {
     try {
