@@ -125,6 +125,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
+        
+        setLoading(true);
         try {
           console.log("Auth state changed:", event);
           if (event === "SIGNED_IN" && session) {
@@ -149,6 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         } finally {
           if (mounted) {
+            console.log("Setting loading to false after auth state change");
             setLoading(false);
           }
         }
