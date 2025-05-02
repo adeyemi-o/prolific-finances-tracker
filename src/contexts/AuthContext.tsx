@@ -60,6 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     console.log("AuthContext: useEffect initializing");
+    setLoading(true);
     let mounted = true;
     
     const checkUser = async () => {
@@ -126,9 +127,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       async (event, session) => {
         if (!mounted) return;
         
-        setLoading(true);
+        console.log("Auth state changed:", event, "Session:", !!session);
+        
         try {
-          console.log("Auth state changed:", event);
           if (event === "SIGNED_IN" && session) {
             const user = session.user;
             const role = await getUserRole(user.id);
@@ -138,10 +139,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 email: user.email || '',
                 role
               });
+              console.log("User set after sign in:", user.id);
             }
           } else if (event === "SIGNED_OUT" || event === "USER_DELETED") {
             if (mounted) {
               setUser(null);
+              console.log("User cleared after sign out");
             }
           }
         } catch (error) {
@@ -151,8 +154,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         } finally {
           if (mounted) {
-            console.log("Setting loading to false after auth state change");
             setLoading(false);
+            console.log("Loading set to false");
           }
         }
       }
