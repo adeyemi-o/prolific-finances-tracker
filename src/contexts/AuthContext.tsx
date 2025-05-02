@@ -1,7 +1,6 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/lib/supabase-client";
-import { User } from "@supabase/supabase-js";
 import { toast } from "@/components/ui/use-toast";
 
 type AuthUser = {
@@ -43,7 +42,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const setupAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        
         if (session?.user) {
           const role = await getUserRole(session.user.id);
           setUser({
@@ -63,23 +61,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state changed:", event, "Session:", !!session);
+        console.log("Auth state changed:", event, "User:", session?.user?.id);
         
-        if (session?.user) {
-          try {
-            const role = await getUserRole(session.user.id);
-            setUser({
-              id: session.user.id,
-              email: session.user.email || '',
-              role
-            });
-          } catch (error) {
-            console.error("Error in auth state change:", error);
-          }
-        } else {
+        if (event === "SIGNED_IN" && session?.user) {
+          const role = await getUserRole(session.user.id);
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            role
+          });
+        } else if (event === "SIGNED_OUT") {
           setUser(null);
         }
-        setLoading(false);
       }
     );
 
@@ -98,10 +91,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
 
-      if (!data.user) {
-        throw new Error("Login successful but no user data received");
+      if (data.user) {
+        const role = await getUserRole(data.user.id);
+        setUser({
+          id: data.user.id,
+          email: data.user.email || '',
+          role
+        });
       }
-
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -110,6 +107,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         description: error instanceof Error ? error.message : "Invalid credentials"
       });
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
