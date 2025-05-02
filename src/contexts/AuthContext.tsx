@@ -1,5 +1,6 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase-client";
 import { User } from "@supabase/supabase-js";
 import { toast } from "@/components/ui/use-toast";
 
@@ -43,49 +44,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const setupAuth = async () => {
       try {
-        // Get initial session
         const { data: { session } } = await supabase.auth.getSession();
-
-        if (session?.user) {
+        
+        if (session?.user && mounted) {
           const role = await getUserRole(session.user.id);
-          if (mounted) {
-            setUser({
-              id: session.user.id,
-              email: session.user.email || '',
-              role
-            });
-          }
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            role
+          });
         }
       } catch (error) {
-        console.error("Error setting up auth:", error);
+        console.error("Error in setupAuth:", error);
       } finally {
         if (mounted) setLoading(false);
       }
     };
 
-    setupAuth();
-
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("Auth state changed:", event, session?.user?.id);
+        if (!mounted) return;
 
-        if (session?.user) {
-          const role = await getUserRole(session.user.id);
-          if (mounted) {
+        try {
+          console.log("Auth state changed:", event, session?.user?.id);
+          
+          if (session?.user) {
+            const role = await getUserRole(session.user.id);
             setUser({
               id: session.user.id,
               email: session.user.email || '',
               role
             });
+          } else {
+            setUser(null);
           }
-        } else {
-          if (mounted) setUser(null);
+        } catch (error) {
+          console.error("Error in auth state change:", error);
+        } finally {
+          setLoading(false);
         }
-
-        if (mounted) setLoading(false);
       }
     );
+
+    setupAuth();
 
     return () => {
       mounted = false;
