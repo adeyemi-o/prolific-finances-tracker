@@ -269,12 +269,12 @@ const Reports = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid gap-6 md:grid-cols-3">
         {loading ? (
           <>
-            <Card><CardContent className="py-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
-            <Card><CardContent className="py-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
-            <Card><CardContent className="py-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
+            <Card><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
+            <Card><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
+            <Card><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
           </>
         ) : (
           <>
@@ -283,7 +283,7 @@ const Reports = () => {
                 <CardTitle className="text-sm font-medium">Total Income</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xl sm:text-2xl font-bold text-green-600 truncate">
+                <div className="text-2xl font-bold text-green-600">
                   ${summary.totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -296,7 +296,7 @@ const Reports = () => {
                 <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xl sm:text-2xl font-bold text-red-600 truncate">
+                <div className="text-2xl font-bold text-red-600">
                   ${summary.totalExpense.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -304,12 +304,12 @@ const Reports = () => {
                 </p>
               </CardContent>
             </Card>
-            <Card className="sm:col-span-2 md:col-span-1">
+            <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-xl sm:text-2xl font-bold truncate ${summary.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`text-2xl font-bold ${summary.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   ${summary.netProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
                 <p className="text-xs text-muted-foreground">

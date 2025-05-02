@@ -269,12 +269,12 @@ const Reports = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid gap-6 md:grid-cols-3">
         {loading ? (
           <>
-            <Card><CardContent className="py-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
-            <Card><CardContent className="py-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
-            <Card><CardContent className="py-6"><Skeleton className="h-20 w-full" /></CardContent></Card>
+            <Card><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
+            <Card><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
+            <Card><CardContent><Skeleton className="h-20 w-full" /></CardContent></Card>
           </>
         ) : (
           <>
@@ -283,7 +283,7 @@ const Reports = () => {
                 <CardTitle className="text-sm font-medium">Total Income</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xl sm:text-2xl font-bold text-green-600 truncate">
+                <div className="text-2xl font-bold text-green-600">
                   ${summary.totalIncome.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -296,7 +296,7 @@ const Reports = () => {
                 <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-xl sm:text-2xl font-bold text-red-600 truncate">
+                <div className="text-2xl font-bold text-red-600">
                   ${summary.totalExpense.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -304,12 +304,12 @@ const Reports = () => {
                 </p>
               </CardContent>
             </Card>
-            <Card className="sm:col-span-2 md:col-span-1">
+            <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={`text-xl sm:text-2xl font-bold truncate ${summary.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`text-2xl font-bold ${summary.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   ${summary.netProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -328,7 +328,7 @@ const Reports = () => {
             Showing {filteredTransactions.length} transactions for the selected period and filter.
           </CardDescription>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
+        <CardContent>
           {loading ? (
             <div className="space-y-2">
               <Skeleton className="h-8 w-1/3 mb-2" />
@@ -339,54 +339,52 @@ const Reports = () => {
           ) : error ? (
             <div className="text-center text-red-600 py-10">{error}</div>
           ) : (
-            <div className="min-w-[600px]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTransactions.length > 0 ? (
-                    filteredTransactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>{format(parseISO(transaction.date), "MMM dd, yyyy")}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={transaction.type === "Income" ? "secondary" : "destructive"}
-                            className="capitalize"
-                          >
-                            {transaction.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="max-w-[200px] truncate" title={transaction.category}>{transaction.category}</TableCell>
-                        <TableCell className="text-right font-medium whitespace-nowrap">
-                          <span
-                            className={
-                              transaction.type === "Income"
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }
-                          >
-                            {transaction.type === "Income" ? "+" : "-"}
-                            ${(transaction.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">
-                        No transactions found for the selected period and filter.
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTransactions.length > 0 ? (
+                  filteredTransactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell>{format(parseISO(transaction.date), "MMM dd, yyyy")}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={transaction.type === "Income" ? "secondary" : "destructive"}
+                          className="capitalize"
+                        >
+                          {transaction.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{transaction.category}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        <span
+                          className={
+                            transaction.type === "Income"
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }
+                        >
+                          {transaction.type === "Income" ? "+" : "-"}
+                          ${(transaction.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </span>
                       </TableCell>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                      No transactions found for the selected period and filter.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
