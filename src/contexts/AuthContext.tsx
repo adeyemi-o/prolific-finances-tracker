@@ -25,14 +25,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let mounted = true;
+
     const initializeAuth = async () => {
+      if (!mounted) return;
+
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        setLoading(true);
+        console.log("Starting auth initialization...");
+        const { data: { session }, error } = await supabase.auth.getSession();
         await handleSession(session);
+        console.log("Session restored successfully");
       } catch (error) {
         console.error("Auth initialization error:", error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -41,7 +50,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     initializeAuth();
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const handleSession = async (session: Session | null) => {

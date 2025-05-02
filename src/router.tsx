@@ -16,6 +16,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Loading />;
   }
 
+  // After loading, if no user on login page, show login
+  if (!user && window.location.pathname === '/login') {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
+    );
+  }
+
   if (!user) {
     return <Navigate to="/login" />;
   }
