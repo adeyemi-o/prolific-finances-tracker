@@ -38,57 +38,62 @@ const getUserRole = async (userId: string): Promise<string> => {
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
-    const setupAuth = async () => {
+    const initializeAuth = async () => {
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log("AuthContext: Starting session initialization");
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
-        if (mounted && currentSession?.user) {
-          const role = await getUserRole(currentSession.user.id);
+        if (sessionError) throw sessionError;
+
+        if (session?.user && mounted) {
+          console.log("Session found, initializing user");
+          const role = await getUserRole(session.user.id);
           setUser({
-            id: currentSession.user.id,
-            email: currentSession.user.email || '',
+            id: session.user.id,
+            email: session.user.email || '',
             role
           });
-          setSession(currentSession);
         }
       } catch (error) {
-        console.error("Auth setup error:", error);
+        console.error("Auth initialization error:", error);
         toast({
           variant: "destructive",
           title: "Authentication Error",
           description: "Failed to restore session"
         });
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          console.log("Auth initialization complete");
+        }
       }
     };
 
-    setupAuth();
+    initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event, session ? "Session exists" : "No session");
+        
         if (!mounted) return;
 
-        try {
-          if (event === "SIGNED_IN" && session?.user) {
+        if (session?.user) {
+          try {
             const role = await getUserRole(session.user.id);
             setUser({
               id: session.user.id,
               email: session.user.email || '',
               role
             });
-            setSession(session);
-          } else if (event === "SIGNED_OUT") {
-            setUser(null);
-            setSession(null);
+          } catch (error) {
+            console.error("Error updating user state:", error);
           }
-        } catch (error) {
-          console.error("Auth state change error:", error);
+        } else {
+          setUser(null);
         }
       }
     );
@@ -102,6 +107,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
+      console.log("Attempting login...");
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -116,7 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email: data.user.email || '',
           role
         });
-        setSession(data.session);
+        console.log("Login successful");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -134,11 +141,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       setLoading(true);
+      console.log("Attempting logout...");
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      
       setUser(null);
-      setSession(null);
+      console.log("Logout successful");
     } catch (error) {
+      console.error("Logout error:", error);
       toast({
         variant: "destructive",
         title: "Logout failed",
