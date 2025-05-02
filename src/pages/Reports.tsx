@@ -352,7 +352,7 @@ const Reports = () => {
                       <TableCell>{format(parseISO(transaction.date), "MMM dd, yyyy")}</TableCell>
                       <TableCell>
                         <Badge
-                          variant={transaction.type === "Income" ? "success" : "destructive"}
+                          variant={transaction.type === "Income" ? "secondary" : "destructive"}
                           className="capitalize"
                         >
                           {transaction.type}

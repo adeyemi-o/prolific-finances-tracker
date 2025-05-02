@@ -12,7 +12,7 @@ import {
   CartesianGrid,
   LineChart,
   Line,
-  Legend // Added Legend import
+  Legend
 } from "recharts";
 import { ArrowUp, ArrowDown, TrendingUp, DollarSign, CreditCard, ChevronRight, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,10 +30,10 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-// Import TooltipProps type
 import { TooltipProps } from 'recharts';
 import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
 import { useNavigate } from "react-router-dom";
+import { parseISO } from "date-fns";
 
 interface SummaryData {
   totalRevenue: number;
@@ -65,13 +65,24 @@ interface RecentTransaction {
 
 // Define Transaction type based on expected Supabase structure
 interface Transaction {
-  id: number; // Or string if using UUIDs
-  created_at: string; // Supabase timestamp
-  date: string; // Date string (e.g., 'YYYY-MM-DD')
+  id: number | string;
+  created_at: string; 
+  date: string;
   type: "Income" | "Expense";
   category: string;
   amount: number;
   description?: string | null;
+}
+
+// Local interface for processed transactions 
+interface ProcessedTransaction {
+  id: number | string;
+  date: Date;
+  type: "Income" | "Expense";
+  category: string;
+  amount: number;
+  description: string;
+  created_at?: string;
 }
 
 const COLORS = ['#2563EB', '#0D9488', '#8B5CF6', '#F59E0B', '#EF4444', '#6B7280', '#10B981', '#EC4899', '#F97316', '#3B82F6'];
@@ -135,7 +146,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<ProcessedTransaction[]>([]);
   const [summaryData, setSummaryData] = useState<SummaryData | null>(null);
   const [expenseData, setExpenseData] = useState<ExpenseData[]>([]);
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
@@ -158,13 +169,15 @@ const Dashboard = () => {
       setError(null);
       try {
         const rawData = await getTransactions();
-        const formattedTransactions: Transaction[] = (rawData as any[]).map(item => ({
+        // Transform string dates into actual Date objects
+        const formattedTransactions: ProcessedTransaction[] = (rawData as Transaction[]).map(item => ({
           id: item.id,
-          date: new Date(item.date),
+          date: parseISO(item.date), // Convert string date to Date object
           type: item.type,
           category: item.category,
           amount: item.amount,
-          description: item.description || ''
+          description: item.description || '',
+          created_at: item.created_at
         }));
         setTransactions(formattedTransactions);
         processData(formattedTransactions, timePeriod);
@@ -184,7 +197,7 @@ const Dashboard = () => {
     fetchData();
   }, [toast, timePeriod]);
 
-  const processData = (data: Transaction[], period: string) => {
+  const processData = (data: ProcessedTransaction[], period: string) => {
     const now = new Date();
     let startDate: Date;
     let endDate: Date = new Date(now);
@@ -222,6 +235,7 @@ const Dashboard = () => {
         break;
     }
 
+    // Now we can safely compare Date objects
     const currentPeriodTransactions = data.filter(tx => tx.date >= startDate && tx.date <= endDate);
     const previousPeriodTransactions = period !== 'all' ? data.filter(tx => tx.date >= prevStartDate && tx.date <= prevEndDate) : [];
 
@@ -319,9 +333,9 @@ const Dashboard = () => {
 
     const sortedTransactions = [...data].sort((a, b) => b.date.getTime() - a.date.getTime());
     const formattedRecent = sortedTransactions.slice(0, 5).map(tx => ({
-      id: tx.id,
+      id: typeof tx.id === 'string' ? parseInt(tx.id, 10) : tx.id as number,
       name: tx.description || tx.category,
-      date: tx.date,
+      date: tx.date, // Already a Date object
       amount: tx.amount,
       type: tx.type.toLowerCase()
     }));
