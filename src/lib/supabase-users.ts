@@ -2,6 +2,27 @@
 import { supabase } from './supabase-client';
 
 /**
+ * Gets the role for a specific user
+ * @param userId The user's ID
+ * @returns The user's role
+ */
+export const getUserRole = async (userId: string): Promise<string> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) throw error;
+    return data?.role || 'User';
+  } catch (error) {
+    console.error("Error getting user role:", error);
+    return 'User'; // Default role if there's an error
+  }
+};
+
+/**
  * Helper function to capitalize the first letter of a string
  * @param str The string to capitalize
  * @returns The capitalized string
