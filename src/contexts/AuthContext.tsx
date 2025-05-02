@@ -28,16 +28,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const initializeAuth = async () => {
-      if (!mounted) return;
-
       try {
-        setLoading(true);
-        console.log("Starting auth initialization...");
         const { data: { session }, error } = await supabase.auth.getSession();
-        await handleSession(session);
-        console.log("Session restored successfully");
+        if (error) throw error;
+        if (mounted) {
+          await handleSession(session);
+        }
       } catch (error) {
         console.error("Auth initialization error:", error);
+        if (mounted) {
+          setUser(null);
+        }
       } finally {
         if (mounted) {
           setLoading(false);
@@ -46,10 +47,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      await handleSession(session);
+      try {
+        await handleSession(session);
+      } catch (error) {
+        console.error("Auth state change error:", error);
+        setUser(null);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
     });
 
     initializeAuth();
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
@@ -58,12 +69,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const handleSession = async (session: Session | null) => {
     if (session?.user) {
-      const role = await getUserRole(session.user.id);
-      setUser({
-        id: session.user.id,
-        email: session.user.email || '',
-        role
-      });
+      try {
+        const role = await getUserRole(session.user.id);
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          role
+        });
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+        setUser(null);
+      }
     } else {
       setUser(null);
     }
@@ -77,7 +93,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password
       });
       if (error) throw error;
-      if (data.user) {
+      if (data.user && data.session) {
+        await handleSession(data.session);
         navigate('/dashboard');
       }
     } catch (error) {
@@ -92,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       await supabase.auth.signOut();
+      setUser(null);
       navigate('/login');
     } catch (error) {
       console.error("Logout error:", error);

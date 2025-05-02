@@ -16,16 +16,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Loading />;
   }
 
-  // After loading, if no user on login page, show login
-  if (!user && window.location.pathname === '/login') {
-    return (
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="*" element={<Navigate to="/login" />} />
-      </Routes>
-    );
-  }
-
   if (!user) {
     return <Navigate to="/login" />;
   }
@@ -33,33 +23,33 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-export default function Router() {
+export function Router() {
   const { user, loading } = useAuth();
 
-  const routes = useRoutes([
+  if (loading) {
+    return <Loading />;
+  }
+
+  return useRoutes([
     {
       path: "/login",
-      element: loading ? <Loading /> : user ? <Navigate to="/dashboard" /> : <Login />
+      element: user ? <Navigate to="/dashboard" /> : <Login />
     },
     {
-      element: (
-        <ProtectedRoute>
-          <Layout />
-        </ProtectedRoute>
-      ),
+      element: <ProtectedRoute><Layout /></ProtectedRoute>,
       children: [
+        { path: "/", element: <Navigate to="/dashboard" /> },
         { path: "/dashboard", element: <Dashboard /> },
-        { path: "/transactions", element: <Transactions /> },
         { path: "/reports", element: <Reports /> },
+        { path: "/transactions", element: <Transactions /> },
         { 
-          path: "/users", 
+          path: "/user-management", 
           element: user?.role === "Admin" ? <UserManagement /> : <Navigate to="/dashboard" /> 
         },
-        { path: "/", element: <Navigate to="/dashboard" /> },
-        { path: "*", element: <NotFound /> }
-      ]
-    }
+        { path: "*", element: <NotFound /> },
+      ],
+    },
   ]);
-
-  return routes;
 }
+
+export default Router;
