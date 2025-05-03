@@ -477,102 +477,85 @@ const Reports = () => {
                           <TableHead>Type</TableHead>
                           <TableHead>Category</TableHead>
                           <TableHead className="text-right">Amount</TableHead>
+                          <TableHead>Description</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredTransactions.length > 0 ? (
-                          filteredTransactions.map((transaction) => (
-                            <TableRow key={transaction.id}>
-                              <TableCell>{format(parseISO(transaction.date), "MMM dd, yyyy")}</TableCell>
+                        {filteredTransactions.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={5} className="h-24 text-center">
+                              No transactions found for the selected filters.
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          filteredTransactions.map((tx) => (
+                            <TableRow key={tx.id}>
+                              <TableCell>{format(new Date(tx.date), "MMM dd, yyyy")}</TableCell>
                               <TableCell>
-                                <Badge
-                                  variant={transaction.type === "Income" ? "secondary" : "destructive"}
-                                  className="capitalize"
-                                >
-                                  {transaction.type}
+                                <Badge variant={tx.type === "Income" ? "outline" : "destructive"}>
+                                  {tx.type}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="max-w-[200px] truncate" title={transaction.category}>{transaction.category}</TableCell>
-                              <TableCell className="text-right font-medium whitespace-nowrap">
-                                <span
-                                  className={
-                                    transaction.type === "Income"
-                                      ? "text-green-600"
-                                      : "text-red-600"
-                                  }
-                                >
-                                  {transaction.type === "Income" ? "+" : "-"}
-                                  ${(transaction.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                </span>
+                              <TableCell>{tx.category}</TableCell>
+                              <TableCell className="text-right font-medium">
+                                ${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                              </TableCell>
+                              <TableCell className="max-w-[200px] truncate">
+                                {tx.description || "-"}
                               </TableCell>
                             </TableRow>
                           ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={4} className="h-24 text-center">
-                              No transactions found for the selected period and filter.
-                            </TableCell>
-                          </TableRow>
                         )}
                       </TableBody>
                     </Table>
                   </div>
                 </div>
               </TabsContent>
-              
-              {/* Card View - Mobile Friendly */}
+
+              {/* Card View */}
               <TabsContent value="cards" className="mt-0">
-                {filteredTransactions.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {filteredTransactions.map((transaction) => (
-                      <Card key={transaction.id} className="overflow-hidden">
+                <div className="grid grid-cols-1 gap-4">
+                  {filteredTransactions.length === 0 ? (
+                    <div className="text-center py-10 text-muted-foreground">
+                      No transactions found for the selected filters.
+                    </div>
+                  ) : (
+                    filteredTransactions.map((tx) => (
+                      <Card key={tx.id} className="overflow-hidden">
                         <CardContent className="p-0">
-                          <div className="flex items-center justify-between p-4 border-b">
-                            <div className="font-medium">{format(parseISO(transaction.date), "MMM dd, yyyy")}</div>
-                            <Badge
-                              variant={transaction.type === "Income" ? "secondary" : "destructive"}
-                              className="capitalize"
-                            >
-                              {transaction.type}
-                            </Badge>
-                          </div>
-                          <div className="p-4 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div className="text-sm text-muted-foreground">Category</div>
-                              <div className="font-medium truncate max-w-[200px]" title={transaction.category}>
-                                {transaction.category}
+                          <div className="flex flex-col sm:flex-row">
+                            <div className={`w-full sm:w-1 sm:min-h-full ${
+                              tx.type === "Income" ? "bg-green-600" : "bg-red-600"
+                            }`} />
+                            <div className="p-4 w-full">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <h3 className="font-medium">{tx.category}</h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    {format(new Date(tx.date), "MMMM d, yyyy")}
+                                  </p>
+                                </div>
+                                <Badge variant={tx.type === "Income" ? "outline" : "destructive"}>
+                                  {tx.type}
+                                </Badge>
+                              </div>
+                              <div className="flex justify-between items-end mt-2">
+                                <p className="text-sm text-muted-foreground max-w-[70%] truncate">
+                                  {tx.description || "No description"}
+                                </p>
+                                <p className={`font-semibold ${
+                                  tx.type === "Income" ? "text-green-600" : "text-red-600"
+                                }`}>
+                                  ${tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                </p>
                               </div>
                             </div>
-                            <div className="flex items-center justify-between">
-                              <div className="text-sm text-muted-foreground">Amount</div>
-                              <div className="font-medium">
-                                <span
-                                  className={
-                                    transaction.type === "Income"
-                                      ? "text-green-600"
-                                      : "text-red-600"
-                                  }
-                                >
-                                  {transaction.type === "Income" ? "+" : "-"}${(transaction.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                </span>
-                              </div>
-                            </div>
-                            {transaction.description && (
-                              <div className="pt-2 border-t mt-2">
-                                <div className="text-sm text-muted-foreground mb-1">Description</div>
-                                <div className="text-sm">{transaction.description}</div>
-                              </div>
-                            )}
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-10 text-muted-foreground">
-                    No transactions found for the selected period and filter.
-                  </div>
-                )}
+                    ))
+                  )}
+                </div>
               </TabsContent>
             </Tabs>
           )}

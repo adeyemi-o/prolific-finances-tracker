@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { getTransactions } from "@/lib/supabase-transactions";
-import { parseISO } from "date-fns";
+import { parseISO, format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 
 // Define Transaction type based on expected Supabase structure
@@ -18,7 +17,7 @@ interface Transaction {
 // Local interface for processed transactions 
 export interface ProcessedTransaction {
   id: number | string;
-  date: Date;
+  date: Date;  // Use Date objects
   type: "Income" | "Expense";
   category: string;
   amount: number;
@@ -49,7 +48,7 @@ export interface MonthlyData {
 export interface RecentTransaction {
   id: number;
   name: string;
-  date: Date;
+  date: Date;  // Use Date objects consistently
   amount: number;
   type: string;
 }
@@ -71,6 +70,7 @@ export function useDashboardData(timePeriod: string) {
       setError(null);
       try {
         const rawData = await getTransactions();
+        
         // Transform string dates into actual Date objects
         const formattedTransactions: ProcessedTransaction[] = (rawData as Transaction[]).map(item => ({
           id: item.id,
@@ -81,6 +81,7 @@ export function useDashboardData(timePeriod: string) {
           description: item.description || '',
           created_at: item.created_at
         }));
+        
         setTransactions(formattedTransactions);
         processData(formattedTransactions, timePeriod);
       } catch (err) {
@@ -108,6 +109,7 @@ export function useDashboardData(timePeriod: string) {
     let prevStartDate: Date;
     let prevEndDate: Date;
 
+    // Set date ranges based on time period
     switch (period) {
       case "1m":
         startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
@@ -137,10 +139,15 @@ export function useDashboardData(timePeriod: string) {
         break;
     }
 
-    // Now we can safely compare Date objects
-    const currentPeriodTransactions = data.filter(tx => tx.date >= startDate && tx.date <= endDate);
-    const previousPeriodTransactions = period !== 'all' ? data.filter(tx => tx.date >= prevStartDate && tx.date <= prevEndDate) : [];
+    // Compare Date objects for filtering
+    const currentPeriodTransactions = data.filter(tx => 
+      tx.date >= startDate && tx.date <= endDate);
+      
+    const previousPeriodTransactions = period !== 'all' 
+      ? data.filter(tx => tx.date >= prevStartDate && tx.date <= prevEndDate) 
+      : [];
 
+    // Calculate financial metrics
     let currentPeriodRevenue = 0;
     let currentPeriodExpenses = 0;
     let previousPeriodRevenue = 0;
@@ -199,6 +206,7 @@ export function useDashboardData(timePeriod: string) {
       netProfitChange
     });
 
+    // Process expenses by category
     const expensesByCategory: Record<string, number> = {};
     currentPeriodTransactions
       .filter(tx => tx.type === 'Expense')
@@ -210,6 +218,7 @@ export function useDashboardData(timePeriod: string) {
       .sort((a, b) => b.value - a.value);
     setExpenseData(formattedExpenseData);
 
+    // Process monthly data for charts
     const monthlyAgg: Record<string, { revenue: number; expenses: number }> = {};
     const sixMonthsAgoChart = new Date();
     sixMonthsAgoChart.setMonth(sixMonthsAgoChart.getMonth() - 5);
@@ -217,7 +226,7 @@ export function useDashboardData(timePeriod: string) {
     sixMonthsAgoChart.setHours(0, 0, 0, 0);
 
     data.filter(tx => tx.date >= sixMonthsAgoChart).forEach(tx => {
-      const monthYear = tx.date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+      const monthYear = format(tx.date, 'MMM yyyy');
       if (!monthlyAgg[monthYear]) {
         monthlyAgg[monthYear] = { revenue: 0, expenses: 0 };
       }
@@ -233,6 +242,7 @@ export function useDashboardData(timePeriod: string) {
       .sort((a, b) => new Date(a.name).getTime() - new Date(b.name).getTime());
     setMonthlyData(sortedMonthlyData);
 
+    // Process recent transactions
     const sortedTransactions = [...data].sort((a, b) => b.date.getTime() - a.date.getTime());
     const formattedRecent = sortedTransactions.slice(0, 5).map(tx => ({
       id: typeof tx.id === 'string' ? parseInt(tx.id, 10) : tx.id as number,

@@ -1,118 +1,52 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
+    --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
     --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
-
-    --secondary: 174.8 84% 32.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --accent: 262.1 83.3% 57.8%;
-    --accent-foreground: 210 40% 98%;
-
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222.2 84% 4.9%;
-    --sidebar-primary: 221.2 83.2% 53.3%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 210 40% 96.1%;
-    --sidebar-accent-foreground: 222.2 84% 4.9%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-ring: 221.2 83.2% 53.3%;
-
-    /* Animation durations */
-    --animation-fast: 150ms;
-    --animation-normal: 250ms;
-    --animation-slow: 500ms;
-    
-    /* Elevation/shadow values */
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --radius: 0.75rem;
   }
-
+ 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 174.8 84% 32.5%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
-    --accent: 262.1 83.3% 57.8%;
-    --accent-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
-
-    --sidebar-background: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217.2 91.2% 59.8%;
-    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 224.3 76.3% 48%;
-    
-    /* Dark mode shadow values */
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      color-scheme: dark;
-    }
-  }
-
-  html,
-  body,
-  #root {
-    @apply h-full m-0; /* Ensure full height and zero margin */
-  }
-
-  body {
-    @apply bg-background text-foreground min-h-screen antialiased;
-    overflow-x: hidden; /* Prevent horizontal scrollbar */
   }
 }
 
@@ -120,246 +54,50 @@
   * {
     @apply border-border;
   }
-
-  html {
-    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
   body {
     @apply bg-background text-foreground;
   }
-  
-  /* Improve focus states for accessibility */
-  :focus-visible {
-    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
-  }
-
-  /* Smooth scrolling for the whole page */
-  :root {
-    scroll-behavior: smooth;
-  }
-  
-  /* Make images and tables responsive by default */
-  img, svg {
-    @apply max-w-full h-auto;
-  }
-  
-  table {
-    @apply w-full;
-  }
-  
-  /* Improve typography */
-  h1, h2, h3, h4, h5, h6 {
-    @apply tracking-tight;
-  }
 }
 
-@layer components {
-  /* Card enhancements */
-  .card-enhanced {
-    @apply border rounded-lg shadow-sm bg-card overflow-hidden transition-all duration-300 hover:shadow-md;
-  }
-  
-  /* Button status indicators */
-  .btn-loading {
-    @apply opacity-80 relative cursor-wait;
-  }
-  .btn-loading::after {
-    @apply content-[''] absolute inset-0 bg-background/20 flex items-center justify-center;
-  }
-  
-  /* Data entry form styling */
-  .form-section {
-    @apply space-y-4 pb-6 mb-6 border-b border-border/50 last:border-0 last:mb-0 last:pb-0;
-  }
-  
-  /* Improved data table */
-  .data-table-container {
-    @apply rounded-lg border shadow-sm overflow-hidden;
-  }
-  
-  /* Interactive elements */
-  .interactive-item {
-    @apply transition-all duration-200 hover:scale-[1.01] active:scale-[0.99];
-  }
-  
-  /* Financial amount displays */
-  .amount-display {
-    @apply tabular-nums tracking-tight font-medium;
-  }
-  
-  /* Navigation elements */
-  .nav-item {
-    @apply relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors duration-150;
-    @apply text-muted-foreground hover:text-foreground hover:bg-accent/70 active:scale-[0.98];
-  }
-  .nav-item-active {
-    @apply bg-primary/10 text-primary font-semibold;
-  }
-  .nav-item-active::before {
-    @apply content-[''] absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary;
-  }
-  .nav-item-icon {
-    @apply h-5 w-5 flex-shrink-0 transition-colors duration-150 group-hover:text-foreground;
-  }
-  .nav-item-text {
-    @apply transition-opacity duration-200 whitespace-nowrap;
-  }
-  .nav-item-text-collapsed {
-    @apply opacity-0 absolute left-full ml-3 px-2 py-1 rounded-md bg-popover text-popover-foreground text-xs shadow-md scale-95 pointer-events-none;
-    @apply group-hover:opacity-100 group-hover:scale-100 group-hover:delay-200 transition-all duration-150;
-  }
-  .group[class*="justify-center"] .nav-item-icon {
-    @apply mx-auto;
-  }
-  .group[class*="justify-center"] .nav-item-active::before {
-    @apply hidden;
-  }
-  .group[class*="justify-center"] {
-    @apply justify-center px-2;
-  }
+.glass-card {
+  @apply backdrop-blur-sm bg-white/5 border border-white/10;
 }
 
-@layer utilities {
-  /* Glass effects */
-  .glass {
-    @apply backdrop-blur-xl bg-white/10 dark:bg-black/10 border border-white/20 dark:border-white/10 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.2)];
-  }
-  
-  .glass-card {
-    @apply bg-card/90 backdrop-blur-md border-border/80 dark:bg-gradient-to-br dark:from-gray-900/90 dark:to-gray-950/80 dark:border-white/10 dark:shadow-inner;
-  }
-  
-  .glass-panel {
-    @apply bg-background/80 backdrop-blur-md border border-border/80 shadow-sm;
-  }
-
-  /* Text effects */
-  .text-gradient {
-    @apply bg-gradient-to-br from-primary via-primary/90 to-primary/70 dark:from-white dark:via-white/90 dark:to-white/70 bg-clip-text text-transparent;
-  }
-  
-  .text-money-positive {
-    @apply text-green-600 dark:text-green-400 font-medium;
-  }
-  
-  .text-money-negative {
-    @apply text-red-600 dark:text-red-400 font-medium;
-  }
-  
-  /* Animation utilities */
-  .animate-in-fast {
-    animation: fadeIn var(--animation-fast) ease forwards;
-  }
-  
-  .animate-in-normal {
-    animation: fadeIn var(--animation-normal) ease forwards;
-  }
-  
-  .animate-in-slow {
-    animation: fadeIn var(--animation-slow) ease forwards;
-  }
-  
-  .hover-scale {
-    @apply transition-transform duration-200 hover:scale-105;
-  }
-  
-  .hover-lift {
-    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md;
-  }
-  
-  /* Responsive utilities */
-  .responsive-container {
-    @apply w-full px-4 sm:px-6 md:px-8 mx-auto max-w-7xl;
-  }
-  
-  .responsive-padding {
-    @apply p-4 sm:p-6 md:p-8;
-  }
-  
-  .responsive-grid {
-    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6;
-  }
-  
-  /* Mobile optimizations */
-  .touch-target {
-    @apply min-h-[48px] min-w-[48px] flex items-center justify-center;
-  }
-  
-  .scrollbar-hide {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-  }
-  
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
-  }
-
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--border)) hsl(var(--background));
-  }
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: hsl(var(--background));
-    border-radius: 3px;
-  }
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--border));
-    border-radius: 3px;
-    border: 1px solid hsl(var(--background));
-  }
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--muted-foreground));
-  }
+.text-gradient {
+  @apply bg-gradient-to-br from-primary via-primary/90 to-primary/70 bg-clip-text text-transparent;
 }
 
-/* Global animations */
+/* Animation utilities */
+.animate-in-slow {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.animate-in-normal {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.animate-in-fast {
+  animation: fadeIn 0.2s ease-out;
+}
+
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes slideInFromBottom {
-  from { transform: translateY(10px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-@keyframes slideInFromLeft {
-  from { transform: translateX(-10px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-/* Print styles for reports */
-@media print {
-  .no-print {
-    display: none !important;
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
   }
-  
-  body {
-    background: white;
-  }
-  
-  .print-only {
-    display: block !important;
-  }
-  
-  .print-break-inside-avoid {
-    break-inside: avoid;
-  }
-  
-  .print-full-width {
-    width: 100% !important;
-    max-width: 100% !important;
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
