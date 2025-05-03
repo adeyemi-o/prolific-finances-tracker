@@ -24,16 +24,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 export function Router() {
-  // Always call all hooks unconditionally at the top level
-  const location = useLocation();
+  // Always call hooks in the same order
+  const location = useLocation(); // Call useLocation first to maintain consistent hook order
   const { user, loading } = useAuth();
 
-  // Conditional rendering after all hooks have been called
   if (loading) {
     return <Loading />;
   }
 
-  // Define routes configuration
   const routes = [
     {
       path: "/login",

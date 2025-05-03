@@ -214,115 +214,21 @@ const Reports = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Financial Reports</h1>
+        <h1 className="text-3xl font-bold mb-2">Financial Reports</h1>
         <p className="text-muted-foreground">
           View and export financial reports for your business
         </p>
       </div>
 
-      {/* Mobile filters dropdown */}
-      <div className="block sm:hidden">
-        <div className="flex items-center justify-between">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 gap-1 w-full max-w-[200px]">
-                <Filter className="h-3.5 w-3.5" />
-                <span>Filters</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-72 p-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Date Range</h4>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        id="date-mobile"
-                        variant={"outline"}
-                        className="w-full justify-start text-left font-normal"
-                        size="sm"
-                      >
-                        <CalendarIcon className="mr-2 h-3.5 w-3.5 flex-shrink-0" />
-                        <span className="truncate text-xs">
-                          {dateRange?.from ? (
-                            dateRange.to ? (
-                              <>
-                                {format(dateRange.from, "LLL dd, y")} -{" "}
-                                {format(dateRange.to, "LLL dd, y")}
-                              </>
-                            ) : (
-                              format(dateRange.from, "LLL dd, y")
-                            )
-                          ) : (
-                            <span>Pick a date range</span>
-                          )}
-                        </span>
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        initialFocus
-                        mode="range"
-                        defaultMonth={dateRange?.from}
-                        selected={dateRange}
-                        onSelect={handleDateRangeChange}
-                        numberOfMonths={1}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Transaction Type</h4>
-                  <Select
-                    value={filterType}
-                    onValueChange={setFilterType}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Filter by type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All">All Transactions</SelectItem>
-                      <SelectItem value="Income">Income Only</SelectItem>
-                      <SelectItem value="Expense">Expenses Only</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="flex justify-between pt-2">
-                  <Button variant="outline" size="sm" onClick={handleExportCSV}>
-                    <Download className="mr-2 h-3.5 w-3.5" />
-                    CSV
-                  </Button>
-                  <Button size="sm" onClick={handleExportPDF}>
-                    <Download className="mr-2 h-3.5 w-3.5" />
-                    PDF
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-          
-          {/* View toggle for mobile */}
-          <Tabs defaultValue={view} onValueChange={(v) => setView(v as "table" | "cards")} className="w-[180px]">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="table">Table</TabsTrigger>
-              <TabsTrigger value="cards">Cards</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-      </div>
-
-      {/* Desktop filters */}
-      <div className="hidden sm:flex sm:flex-row sm:flex-wrap gap-4">
-        <div className="w-auto">
+      <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:flex-wrap gap-4">
+        <div className="w-full sm:w-auto">
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 id="date"
                 variant={"outline"}
                 className={cn(
-                  "sm:w-[250px] md:w-[300px] justify-start text-left font-normal",
+                  "w-full sm:w-[250px] md:w-[300px] justify-start text-left font-normal",
                   !dateRange && "text-muted-foreground"
                 )}
               >
@@ -357,12 +263,12 @@ const Reports = () => {
           </Popover>
         </div>
 
-        <div className="w-auto">
+        <div className="w-full sm:w-auto">
           <Select
             value={filterType}
             onValueChange={setFilterType}
           >
-            <SelectTrigger className="sm:w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Filter by type" />
             </SelectTrigger>
             <SelectContent>
@@ -373,25 +279,15 @@ const Reports = () => {
           </Select>
         </div>
 
-        <div className="flex gap-2 ml-auto">
-          <Button variant="outline" onClick={handleExportCSV}>
+        <div className="flex flex-col xs:flex-row gap-2 w-full sm:w-auto sm:ml-auto">
+          <Button className="w-full xs:w-auto" variant="outline" onClick={handleExportCSV}>
             <Download className="mr-2 h-4 w-4" />
             <span>CSV</span>
           </Button>
-          <Button onClick={handleExportPDF}>
+          <Button className="w-full xs:w-auto" onClick={handleExportPDF}>
             <Download className="mr-2 h-4 w-4" />
             <span>PDF</span>
           </Button>
-        </div>
-        
-        {/* Desktop view toggle */}
-        <div className="hidden sm:block">
-          <Tabs defaultValue={view} onValueChange={(v) => setView(v as "table" | "cards")}>
-            <TabsList>
-              <TabsTrigger value="table">Table</TabsTrigger>
-              <TabsTrigger value="cards">Cards</TabsTrigger>
-            </TabsList>
-          </Tabs>
         </div>
       </div>
 
@@ -454,7 +350,7 @@ const Reports = () => {
             Showing {filteredTransactions.length} transactions for the selected period and filter.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           {loading ? (
             <div className="space-y-2">
               <Skeleton className="h-8 w-1/3 mb-2" />
@@ -465,116 +361,54 @@ const Reports = () => {
           ) : error ? (
             <div className="text-center text-red-600 py-10">{error}</div>
           ) : (
-            <Tabs value={view} className="w-full">
-              {/* Table View */}
-              <TabsContent value="table" className="mt-0">
-                <div className="overflow-x-auto">
-                  <div className="min-w-[600px]">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Category</TableHead>
-                          <TableHead className="text-right">Amount</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredTransactions.length > 0 ? (
-                          filteredTransactions.map((transaction) => (
-                            <TableRow key={transaction.id}>
-                              <TableCell>{format(parseISO(transaction.date), "MMM dd, yyyy")}</TableCell>
-                              <TableCell>
-                                <Badge
-                                  variant={transaction.type === "Income" ? "secondary" : "destructive"}
-                                  className="capitalize"
-                                >
-                                  {transaction.type}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="max-w-[200px] truncate" title={transaction.category}>{transaction.category}</TableCell>
-                              <TableCell className="text-right font-medium whitespace-nowrap">
-                                <span
-                                  className={
-                                    transaction.type === "Income"
-                                      ? "text-green-600"
-                                      : "text-red-600"
-                                  }
-                                >
-                                  {transaction.type === "Income" ? "+" : "-"}
-                                  ${(transaction.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                </span>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={4} className="h-24 text-center">
-                              No transactions found for the selected period and filter.
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              </TabsContent>
-              
-              {/* Card View - Mobile Friendly */}
-              <TabsContent value="cards" className="mt-0">
-                {filteredTransactions.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {filteredTransactions.map((transaction) => (
-                      <Card key={transaction.id} className="overflow-hidden">
-                        <CardContent className="p-0">
-                          <div className="flex items-center justify-between p-4 border-b">
-                            <div className="font-medium">{format(parseISO(transaction.date), "MMM dd, yyyy")}</div>
-                            <Badge
-                              variant={transaction.type === "Income" ? "secondary" : "destructive"}
-                              className="capitalize"
-                            >
-                              {transaction.type}
-                            </Badge>
-                          </div>
-                          <div className="p-4 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div className="text-sm text-muted-foreground">Category</div>
-                              <div className="font-medium truncate max-w-[200px]" title={transaction.category}>
-                                {transaction.category}
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="text-sm text-muted-foreground">Amount</div>
-                              <div className="font-medium">
-                                <span
-                                  className={
-                                    transaction.type === "Income"
-                                      ? "text-green-600"
-                                      : "text-red-600"
-                                  }
-                                >
-                                  {transaction.type === "Income" ? "+" : "-"}${(transaction.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                </span>
-                              </div>
-                            </div>
-                            {transaction.description && (
-                              <div className="pt-2 border-t mt-2">
-                                <div className="text-sm text-muted-foreground mb-1">Description</div>
-                                <div className="text-sm">{transaction.description}</div>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-10 text-muted-foreground">
-                    No transactions found for the selected period and filter.
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
+            <div className="min-w-[600px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTransactions.length > 0 ? (
+                    filteredTransactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell>{format(parseISO(transaction.date), "MMM dd, yyyy")}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={transaction.type === "Income" ? "secondary" : "destructive"}
+                            className="capitalize"
+                          >
+                            {transaction.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate" title={transaction.category}>{transaction.category}</TableCell>
+                        <TableCell className="text-right font-medium whitespace-nowrap">
+                          <span
+                            className={
+                              transaction.type === "Income"
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }
+                          >
+                            {transaction.type === "Income" ? "+" : "-"}
+                            ${(transaction.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-24 text-center">
+                        No transactions found for the selected period and filter.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -17,25 +17,9 @@
     <meta name="twitter:image" content="/prolific-homecare-logo.png" />
     
     <link rel="icon" href="/prolific-homecare-logo.png" type="image/png">
-    
-    <!-- Theme script to prevent flickering on page load -->
-    <script>
-      (function() {
-        // Get theme preference from localStorage
-        const theme = localStorage.getItem('prolific-ui-theme') || 'system';
-        
-        // Apply theme immediately to prevent flash
-        const root = document.documentElement;
-        if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          root.classList.add('dark');
-        } else {
-          root.classList.remove('dark');
-        }
-      })();
-    </script>
   </head>
 
-  <body>
+  <body class="dark">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

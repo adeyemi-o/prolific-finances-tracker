@@ -241,41 +241,38 @@ export const ensureUserRoles = async (defaultRole: string = 'Standard User') => 
     let updatedCount = 0;
     
     for (const user of users) {
-      try {
-        // First fetch the user's role from the user_roles table
-        const { data: userRole, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
+      // First fetch the user's role from the user_roles table
+      const { data: userRole, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
+        console.error(`Error fetching role for user ${user.id}:`, error);
+        continue;
+      }
+      
+      // Determine the correct role from the user_roles table or use default
+      const correctRole = userRole?.role || defaultRole;
+      
+      // Check if user metadata role doesn't match the database role or is missing
+      if (!user.user_metadata?.role || 
+          user.user_metadata.role === 'User' || 
+          user.user_metadata.role !== correctRole) {
         
-        if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
-          console.warn(`Non-critical error fetching role for user ${user.id}:`, error);
-          continue;
-        }
-        
-        // Determine the correct role from the user_roles table or use default
-        const correctRole = userRole?.role || defaultRole;
-        
-        // Check if user metadata role doesn't match the database role or is missing
-        if (!user.user_metadata?.role || 
-            user.user_metadata.role === 'User' || 
-            user.user_metadata.role !== correctRole) {
-          
-          // Update the user metadata to match their role from the database
-          await updateUserMetadata(user.id, { role: correctRole });
-          updatedCount++;
-        }
-      } catch (userError) {
-        console.warn(`Failed to process user ${user.id || 'unknown'}:`, userError);
-        // Continue with next user instead of breaking the whole operation
+        // Update the user metadata to match their role from the database
+        await updateUserMetadata(user.id, {
+          role: correctRole
+        });
+        updatedCount++;
       }
     }
     
     return updatedCount;
   } catch (error) {
     console.error("Error ensuring user roles:", error);
-    return 0; // Return 0 users updated instead of throwing
+    throw error;
   }
 };
 
@@ -312,39 +309,36 @@ export const ensureAdminUser = async (email: string) => {
     
     if (userError) {
       console.error("Error fetching users:", userError);
-      return false; // Return false instead of throwing
+      throw userError;
     }
 
     const adminUser = users.find(user => user.email === email);
     if (!adminUser) {
-      console.warn(`User with email ${email} not found, cannot ensure admin role`);
-      return false;
+      throw new Error(`User with email ${email} not found`);
     }
     
     // Update the user's role in both metadata and the user_roles table
-    await updateUserMetadata(adminUser.id, { role: 'Admin' });
+    await updateUserMetadata(adminUser.id, {
+      role: 'Admin'
+    });
     
     // Also update the role in the user_roles table if you have access to it
-    try {
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .upsert({ 
-          user_id: adminUser.id, 
-          role: 'Admin' 
-        }, { 
-          onConflict: 'user_id' 
-        });
-      
-      if (roleError) {
-        console.warn("Non-critical error updating user_roles table:", roleError);
-      }
-    } catch (roleError) {
-      console.warn("Failed to update role in database, but metadata was updated:", roleError);
+    const { error: roleError } = await supabase
+      .from('user_roles')
+      .upsert({ 
+        user_id: adminUser.id, 
+        role: 'Admin' 
+      }, { 
+        onConflict: 'user_id' 
+      });
+    
+    if (roleError) {
+      console.error("Error updating user_roles table:", roleError);
     }
     
     return true;
   } catch (error) {
     console.error("Error ensuring admin user:", error);
-    return false; // Return false instead of throwing
+    throw error;
   }
 };
