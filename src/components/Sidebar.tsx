@@ -1,9 +1,10 @@
+
 import { NavLink } from "react-router-dom";
 import { 
-  LayoutDashboard, // Changed from ChartPie for consistency
+  LayoutDashboard,
   FileText, 
   Users, 
-  BarChart3, // Added for Reports
+  BarChart3,
   Menu,
   X,
   LogOut,
@@ -21,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMobile, useTablet, useDesktop } from "@/hooks/use-mobile";
+import { useMobile, useTablet } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
 
 type SidebarProps = {
@@ -33,8 +34,20 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const { user, logout, loading } = useAuth();
   const isMobile = useMobile();
   const isTablet = useTablet();
-  const isDesktop = useDesktop();
+  const [isDesktop, setIsDesktop] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  // Check for desktop size using similar approach as the hooks
+  useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(window.innerWidth >= 1024 && window.innerWidth < 1280);
+    };
+    
+    window.addEventListener('resize', checkDesktop);
+    checkDesktop();
+    
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
 
   // Check scroll position for mobile header shadow
   useEffect(() => {

@@ -1,40 +1,15 @@
-<!DOCTYPE html>
+
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Prolific Homecare - Financial Tracker</title>
-    <meta name="description" content="Financial tracking system for Prolific Homecare" />
-    <meta name="author" content="Lovable" />
-
-    <meta property="og:title" content="Prolific Homecare - Financial Tracker" />
-    <meta property="og:description" content="Financial tracking system for Prolific Homecare" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="/prolific-homecare-logo.png" />
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="/prolific-homecare-logo.png" />
-    
-    <link rel="icon" href="/prolific-homecare-logo.png" type="image/png">
-    
-    <!-- Theme script to prevent flickering on page load -->
-    <script>
-      (function() {
-        // Get theme preference from localStorage
-        const theme = localStorage.getItem('prolific-ui-theme') || 'system';
-        
-        // Apply theme immediately to prevent flash
-        const root = document.documentElement;
-        if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          root.classList.add('dark');
-        } else {
-          root.classList.remove('dark');
-        }
-      })();
-    </script>
+    <title>Prolific Homecare Financial Tracker</title>
+    <meta name="description" content="Internal financial tracking application for Prolific Homecare LLC" />
+    <!-- Required Lovable script tag -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
   </head>
-
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
