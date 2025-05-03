@@ -4,9 +4,16 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Prolific Homecare Financial Tracker</title>
     <meta name="description" content="Internal financial tracking application for Prolific Homecare LLC" />
+    <!-- Preconnect to critical domains to speed up loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Optional: Add Content-Security-Policy to limit feature detection -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.gpteng.co 'unsafe-inline' 'unsafe-eval'; connect-src 'self' https://*.supabase.co; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline';" />
+    <!-- Feature Policy to disable unnecessary feature detection -->
+    <meta http-equiv="Feature-Policy" content="vr 'none'; ambient-light-sensor 'none'; battery 'none';" />
     <!-- Required Lovable script tag -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
   </head>
