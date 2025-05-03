@@ -16,6 +16,7 @@ import {
   SidebarFooter,
   SidebarHeader, 
   SidebarInset,
+  SidebarWrapper,
   SidebarProvider
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
