@@ -1,4 +1,5 @@
 import { supabase } from './supabase-client';
+import { logAuditEvent } from './audit-logger';
 
 /**
  * Gets all transactions, ordered by date
@@ -29,13 +30,35 @@ export const addTransaction = async (transaction: {
   amount: number;
   description?: string;
 }) => {
-  const { error } = await supabase.from('transactions').insert([transaction]);
-  
-  if (error) {
+  let outcome = 'success';
+  try {
+    const { error, data } = await supabase.from('transactions').insert([transaction]).select();
+    if (error) {
+      outcome = 'failure';
+      throw error;
+    }
+    // Log audit event
+    await logAuditEvent({
+      event_type: 'create',
+      resource: 'transaction',
+      resource_id: data && data[0] && data[0].id ? String(data[0].id) : undefined,
+      previous_state: null,
+      new_state: transaction,
+      outcome,
+    });
+    return true;
+  } catch (error) {
+    // Log failure
+    await logAuditEvent({
+      event_type: 'create',
+      resource: 'transaction',
+      resource_id: undefined,
+      previous_state: null,
+      new_state: transaction,
+      outcome: 'failure',
+    });
     throw error;
   }
-  
-  return true;
 };
 
 /**
@@ -51,16 +74,50 @@ export const updateTransaction = async (id: string, transaction: {
   amount?: number;
   description?: string;
 }) => {
-  const { error } = await supabase
-    .from('transactions')
-    .update(transaction)
-    .eq('id', id);
-    
-  if (error) {
+  let outcome = 'success';
+  let previous_state = null;
+  try {
+    // Fetch previous state
+    const { data: prevData, error: prevError } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (prevError) {
+      outcome = 'failure';
+      throw prevError;
+    }
+    previous_state = prevData;
+    const { error } = await supabase
+      .from('transactions')
+      .update(transaction)
+      .eq('id', id);
+    if (error) {
+      outcome = 'failure';
+      throw error;
+    }
+    // Log audit event
+    await logAuditEvent({
+      event_type: 'update',
+      resource: 'transaction',
+      resource_id: id,
+      previous_state,
+      new_state: transaction,
+      outcome,
+    });
+    return true;
+  } catch (error) {
+    // Log failure
+    await logAuditEvent({
+      event_type: 'update',
+      resource: 'transaction',
+      resource_id: id,
+      previous_state,
+      new_state: transaction,
+      outcome: 'failure',
+    });
     throw error;
   }
-  
-  return true;
 };
 
 /**
@@ -69,13 +126,47 @@ export const updateTransaction = async (id: string, transaction: {
  * @returns True if successful
  */
 export const deleteTransaction = async (id: string) => {
-  const { error } = await supabase.from('transactions').delete().eq('id', id);
-  
-  if (error) {
+  let outcome = 'success';
+  let previous_state = null;
+  try {
+    // Fetch previous state
+    const { data: prevData, error: prevError } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (prevError) {
+      outcome = 'failure';
+      throw prevError;
+    }
+    previous_state = prevData;
+    const { error } = await supabase.from('transactions').delete().eq('id', id);
+    if (error) {
+      outcome = 'failure';
+      throw error;
+    }
+    // Log audit event
+    await logAuditEvent({
+      event_type: 'delete',
+      resource: 'transaction',
+      resource_id: id,
+      previous_state,
+      new_state: null,
+      outcome,
+    });
+    return true;
+  } catch (error) {
+    // Log failure
+    await logAuditEvent({
+      event_type: 'delete',
+      resource: 'transaction',
+      resource_id: id,
+      previous_state,
+      new_state: null,
+      outcome: 'failure',
+    });
     throw error;
   }
-  
-  return true;
 };
 
 /**

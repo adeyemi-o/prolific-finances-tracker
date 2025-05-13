@@ -1,0 +1,124 @@
+# Prolific Homecare LLC Financial Tracker Product Requirements Document
+
+## 1. Introduction
+### 1.1 Overview
+This Product Requirements Document (PRD) outlines the requirements for the Prolific Homecare LLC Financial Tracker, a web-based application designed to streamline financial management for Prolific Homecare LLC. The app replaces manual Excel-based tracking (e.g., Profit and Loss 2024.xlsx) with a secure, user-friendly platform for internal use by the owner and designated individuals. It enables transaction management, financial reporting, and user administration, ensuring accurate insights and operational efficiency.
+
+### 1.2 Purpose
+The purpose of this PRD is to define the functional and technical requirements for a fully functional Financial Tracker app. It provides a clear roadmap for developers, designers, and stakeholders to build, test, and deploy the app, aligning with the needs of Prolific Homecare LLC.
+
+## 2. Product overview
+### 2.1 Description
+The Prolific Homecare LLC Financial Tracker is a secure web application built with React, TailwindCSS, and Supabase, hosted on Netlify. It allows authorized users to input, edit, and delete financial transactions, view real-time financial metrics, generate reports, and manage user access. Key features include a dashboard with summary cards and charts, a transactions module for CRUD operations, a reports module with CSV and PDF exports, user management for admin tasks, settings for configuration, and audit logging for accountability.
+
+### 2.2 Scope
+The app is for internal use only, accessible to the owner (admin) and designated individuals. All users have full transaction CRUD access, while the admin can add and manage users. The app supports the financial structure from the 2024 Profit and Loss data, with scalability for future enhancements like bank integrations.
+
+## 3. Goals and objectives
+### 3.1 Goals
+- Digitize financial tracking to replace Excel processes.
+- Provide real-time insights into revenue, expenses, and profits.
+- Enable secure user management and data access for internal users.
+- Generate accurate, exportable financial reports.
+- Maintain audit trails for all transaction and user actions.
+
+### 3.2 Objectives
+- Achieve 100% user adoption within 1 month of launch.
+- Ensure financial calculations match Excel data (e.g., Net Profit After Tax: $53,410 for 2024).
+- Generate at least 10 reports monthly (CSV/PDF).
+- Support up to 10 concurrent users and 50,000 transactions annually.
+- Maintain 99.9% uptime via Netlify hosting.
+
+## 4. Target audience
+- **Owner (Admin)**: Primary user with full access, responsible for adding users and overseeing financial data.
+- **Designated Individuals**: Authorized staff (e.g., financial admins) who input, edit, and delete transactions and access reports.
+- **Characteristics**:
+  - Basic computer literacy.
+  - Familiar with Excel-based financial tracking.
+  - Require intuitive UI and minimal training.
+
+## 5. Features and requirements
+### 5.1 Dashboard
+- **Summary cards**:
+  - Display Total Revenue, Total Expenses, Gross Profit, Operating Profit, Net Profit Before Tax, Net Profit After Tax.
+  - Calculations: Gross Profit = Revenue - Cost of Services; Operating Profit = Gross Profit - Operating Expenses; Net Profit After Tax = (Operating Profit - Other Expenses) × (1 - Tax Rate).
+- **Visualizations**:
+  - Pie chart for expense categories.
+  - Bar chart for revenue vs. expenses by month/quarter/year.
+  - Line chart for net profit trends.
+- **Filters**:
+  - Date range (monthly, quarterly, yearly).
+  - Category filter for specific insights.
+- **Interactivity**:
+  - Clickable charts to view transaction details.
+  - Refresh button for data updates.
+
+### 5.2 Transactions module
+- **Input form**:
+  - Fields: Date (date picker), Type (Income/Expense), Category (dropdown), Amount (numeric), Description (text).
+  - Validation: Required fields, positive amount, valid date.
+- **Transaction list**:
+  - Table: Date, Type, Category, Amount, Description, Actions (Edit/Delete).
+  - Features: Sort, search, pagination (50 transactions/page).
+- **Edit/Delete**:
+  - Edit via modal with pre-filled data.
+  - Delete with confirmation prompt.
+- **Bulk actions**:
+  - Batch delete selected transactions.
+  - CSV import for transactions.
+
+### 5.3 Reports
+- **Generation**:
+  - Filters: Date range, Type, Category.
+  - Summary report: Replicates Profit and Loss structure.
+  - Detailed report: Lists filtered transactions.
+- **Exports**:
+  - CSV: Transactions or summary.
+  - PDF: Formatted Profit and Loss with charts (using `jsPDF`).
+- **Email delivery**:
+  - Send reports as CSV/PDF via Supabase Edge Function.
+  - Schedule monthly reports.
+
+### 5.4 User management
+- **Authentication**:
+  - Email/password login via Supabase Auth.
+  - Optional Google OAuth.
+- **Admin features**:
+  - Add users: Manual entry (email, name, temporary password) or email invites.
+  - View, deactivate, or delete users.
+- **User features**:
+  - Full CRUD access to transactions.
+  - Update personal profile (name, email, password).
+
+### 5.5 Settings
+- **Category management**:
+  - Add/edit/delete categories (Name, Type: Income/Expense).
+  - Prevent deletion if category is in use.
+- **Tax rate**:
+  - Configure tax rate (default: 30%).
+- **Preferences**:
+  - Default date range, currency (USD).
+
+### 5.6 Audit logging
+- **Transaction logs**:
+  - Log create, update, delete actions with user ID, timestamp, and details.
+- **User logs**:
+  - Log user management actions (add, deactivate, delete).
+- **Access**:
+  - Admin-only view of logs, filterable by date, user, action.
+
+## 6. User stories and acceptance criteria
+| ID     | User Story | Acceptance Criteria |
+|--------|------------|---------------------|
+| ST-101 | **As an admin, I want to add new users so that designated individuals can access the app.** | - Admin can access user management page.<br>- Form allows input of email, name, and temporary password or sending an email invite.<br>- New user is added to Supabase Auth.<br>- User receives email invite or temporary password.<br>- Success message shown; failure shows error (e.g., "Email already exists"). |
+| ST-102 | **As a user, I want to log in with email/password or Google so that I can access the app securely.** | - Login page offers email/password and Google OAuth options.<br>- Successful login redirects to Dashboard.<br>- Invalid credentials show error message.<br>- Session persists via JWT token.<br>- Password reset option available. |
+| ST-103 | **As a user, I want to input a transaction so that I can record financial data.** | - Form includes Date, Type, Category, Amount, Description fields.<br>- Validation: Date valid, Type is Income/Expense, Amount > 0, Category from `categories` table.<br>- Submission saves to `transactions` table.<br>- Success message shown; errors displayed (e.g., "Invalid amount"). |
+| ST-104 | **As a user, I want to edit a transaction so that I can correct errors.** | - Edit button in transaction list opens modal with pre-filled data.<br>- Changes save to `transactions` table.<br>- Audit log records user ID, old/new values, timestamp.<br>- Success message shown; errors displayed. |
+| ST-105 | **As a user, I want to delete a transaction so that I can remove incorrect entries.** | - Delete button shows confirmation prompt.<br>- Deletion removes record from `transactions` table.<br>- Audit log records deletion.<br>- Success message shown; errors displayed. |
+| ST-106 | **As a user, I want to view the dashboard so that I can see financial summaries and charts.** | - Dashboard shows cards for Total Revenue, Expenses, Profits.<br>- Displays pie, bar, and line charts.<br>- Filters update data in real-time.<br>- Clicking chart element shows related transactions.<br>- Calculations match Excel (e.g., Net Profit After Tax: $53,410 for 2024). |
+| ST-107 | **As a user, I want to generate and export reports so that I can analyze financial data.** | - Reports page offers date, type, category filters.<br>- Summary report shows Profit and Loss structure.<br>- CSV and PDF exports available.<br>- PDF includes charts and tables.<br>- Email option sends report to user's email.<br>- Exports match filtered data. |
+| ST-108 | **As an admin, I want to manage categories so that I can customize transaction types.** | - Settings page allows adding/editing/deleting categories.<br>- Deletion prevented if category is in use.<br>- Changes reflect in transaction form dropdown.<br>- Success/error messages shown. |
+| ST-109 | **As an admin, I want to view audit logs so that I can track changes.** | - Audit log page shows table with user ID, action, entity, details, timestamp.<br>- Filterable by date, user, action.<br>- Accessible only to admin.<br>- Logs include all transaction and user actions. |
+| ST-110 | **As a user, I want to import transactions via CSV so that I can bulk-load data.** | - Import button allows CSV upload matching `transactions` schema.<br>- Validates data before insertion.<br>- Success message shows number of imported records; errors list issues. |
+| ST-111 | **As a user, I want to configure the tax rate so that profit calculations are accurate.** | - Settings page allows setting tax rate (default: 30%).<br>- Updates apply to all reports.<br>- Success message shown; errors displayed. |
+| ST-112 | **As a developer, I want to model the database to support all app features efficiently.** | - Tables created: `transactions`, `categories`, `audit_logs` (per PRD schema).<br>- R 

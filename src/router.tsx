@@ -9,6 +9,7 @@ import Reports from "@/pages/Reports";
 import Transactions from "@/pages/Transactions";
 import UserManagement from "@/pages/UserManagement";
 import NotFound from "@/pages/NotFound";
+import AuditLogsPage from "@/pages/AuditLogsPage";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -45,6 +46,10 @@ export function Router() {
         { 
           path: "/user-management", 
           element: user?.role === "Admin" ? <UserManagement /> : <Navigate to="/dashboard" /> 
+        },
+        {
+          path: "/audit-logs",
+          element: user?.role === "Admin" ? <AuditLogsPage /> : <Navigate to="/dashboard" />
         },
         { path: "*", element: <NotFound /> },
       ],

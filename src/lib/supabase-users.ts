@@ -1,4 +1,5 @@
 import { supabase } from './supabase-client';
+import { logAuditEvent } from './audit-logger';
 
 /**
  * Gets the role for a specific user
@@ -125,6 +126,7 @@ export const createUser = async (user: {
   role: string;
   name?: string; 
 }) => {
+  let outcome = 'success';
   try {
     // Ensure role is properly capitalized when creating a user
     const role = capitalizeFirstLetter(user.role);
@@ -153,8 +155,26 @@ export const createUser = async (user: {
     }
 
     const data = await response.json();
+    // Log audit event
+    await logAuditEvent({
+      event_type: 'create',
+      resource: 'user',
+      resource_id: data && data.user && data.user.id ? String(data.user.id) : undefined,
+      previous_state: null,
+      new_state: user,
+      outcome,
+    });
     return data;
   } catch (error) {
+    // Log failure
+    await logAuditEvent({
+      event_type: 'create',
+      resource: 'user',
+      resource_id: undefined,
+      previous_state: null,
+      new_state: user,
+      outcome: 'failure',
+    });
     console.error("Error in createUser:", error);
     throw error;
   }
@@ -171,7 +191,20 @@ export const updateUserMetadata = async (userId: string, metadata: {
   name?: string;
   [key: string]: any;
 }) => {
+  let outcome = 'success';
+  let previous_state = null;
   try {
+    // Fetch previous state
+    const { data: prevData, error: prevError } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    if (prevError) {
+      outcome = 'failure';
+      throw prevError;
+    }
+    previous_state = prevData;
     // Try to update metadata directly through Supabase client first
     const { data: sessionData } = await supabase.auth.getSession();
     if (!sessionData?.session) {
@@ -186,6 +219,15 @@ export const updateUserMetadata = async (userId: string, metadata: {
       );
       
       if (!error) {
+        // After successful update
+        await logAuditEvent({
+          event_type: 'update',
+          resource: 'user',
+          resource_id: userId,
+          previous_state,
+          new_state: metadata,
+          outcome,
+        });
         return data;
       }
       // If admin API fails, we'll try the edge function as fallback
@@ -222,6 +264,15 @@ export const updateUserMetadata = async (userId: string, metadata: {
       }
 
       const data = await response.json();
+      // After successful update
+      await logAuditEvent({
+        event_type: 'update',
+        resource: 'user',
+        resource_id: userId,
+        previous_state,
+        new_state: metadata,
+        outcome,
+      });
       return data;
     } catch (fetchError) {
       // If edge function also fails, update local metadata as fallback
@@ -229,6 +280,15 @@ export const updateUserMetadata = async (userId: string, metadata: {
       console.warn("Edge function failed, updating local metadata only:", fetchError);
       
       // Return a simulated success response to prevent UI errors
+      // After failed update
+      await logAuditEvent({
+        event_type: 'update',
+        resource: 'user',
+        resource_id: userId,
+        previous_state,
+        new_state: metadata,
+        outcome: 'failure',
+      });
       return {
         user: {
           id: userId,
@@ -237,6 +297,15 @@ export const updateUserMetadata = async (userId: string, metadata: {
       };
     }
   } catch (error) {
+    // Log failure
+    await logAuditEvent({
+      event_type: 'update',
+      resource: 'user',
+      resource_id: userId,
+      previous_state,
+      new_state: metadata,
+      outcome: 'failure',
+    });
     console.error("Error in updateUserMetadata:", error);
     // Return a minimal structure instead of throwing to prevent UI crashes
     return {
@@ -304,15 +373,46 @@ export const ensureUserRoles = async (defaultRole: string = 'Standard User') => 
  * @returns True if successful
  */
 export const deleteUser = async (id: string) => {
+  let outcome = 'success';
+  let previous_state = null;
   try {
+    // Fetch previous state
+    const { data: prevData, error: prevError } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (prevError) {
+      outcome = 'failure';
+      throw prevError;
+    }
+    previous_state = prevData;
     // We can't actually delete users from auth.users without admin access,
     // so instead we'll just remove their access by disabling their account
     // via our Edge Function
     
     // For now, fake success response
     console.log(`User ${id} would be disabled (not actually implemented yet)`);
+    // Log audit event
+    await logAuditEvent({
+      event_type: 'delete',
+      resource: 'user',
+      resource_id: id,
+      previous_state,
+      new_state: null,
+      outcome,
+    });
     return true;
   } catch (error) {
+    // Log failure
+    await logAuditEvent({
+      event_type: 'delete',
+      resource: 'user',
+      resource_id: id,
+      previous_state,
+      new_state: null,
+      outcome: 'failure',
+    });
     console.error("Error in deleteUser:", error);
     throw error;
   }
