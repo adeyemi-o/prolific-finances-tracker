@@ -1,33 +1,14 @@
+import React, { lazy, Suspense } from "react";
 import { Navigate, useRoutes, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Layout from "@/components/Layout";
+import Loading from "@/components/ui/loading";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Reports from "@/pages/Reports";
 import Transactions from "@/pages/Transactions";
 import UserManagement from "@/pages/UserManagement";
 import NotFound from "@/pages/NotFound";
-import Loading from "@/components/ui/loading";
-
-// Add the guard component for login
-function LoginGuard() {
-  const { user, loading } = useAuth();
-  if (loading) return <Loading />;
-  if (user) {
-    return <Navigate to="/dashboard" />;
-  }
-  return <Login />;
-}
-
-// Add the guard component here
-function UserManagementGuard() {
-  const { user, loading } = useAuth();
-  if (loading) return <Loading />;
-  if (user?.role === "Admin") {
-    return <UserManagement />;
-  }
-  return <Navigate to="/dashboard" />;
-}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -52,7 +33,7 @@ export function Router() {
   const routes = [
     {
       path: "/login",
-      element: <LoginGuard />
+      element: user ? <Navigate to="/dashboard" /> : <Login />
     },
     {
       element: <ProtectedRoute><Layout /></ProtectedRoute>,
@@ -61,7 +42,10 @@ export function Router() {
         { path: "/dashboard", element: <Dashboard /> },
         { path: "/reports", element: <Reports /> },
         { path: "/transactions", element: <Transactions /> },
-        { path: "/user-management", element: <UserManagementGuard /> },
+        { 
+          path: "/user-management", 
+          element: user?.role === "Admin" ? <UserManagement /> : <Navigate to="/dashboard" /> 
+        },
         { path: "*", element: <NotFound /> },
       ],
     },
