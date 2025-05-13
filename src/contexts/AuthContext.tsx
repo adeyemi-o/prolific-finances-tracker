@@ -7,6 +7,7 @@ interface User {
   id: string;
   email: string;
   role: string;
+  raw_user_meta_data?: { display_name?: string };
 }
 
 interface AuthContextType {
@@ -27,9 +28,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initializeAuth = async () => {
       try {
+        console.log("Calling getSession...");
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
         if (mounted) {
+          console.log("Session received:", session);
           await handleSession(session);
         }
       } catch (error) {
@@ -39,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } finally {
         if (mounted) {
+          console.log("Setting loading to false (init)");
           setLoading(false);
         }
       }
@@ -46,12 +50,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       try {
+        console.log("Auth state changed:", event, session);
         await handleSession(session);
       } catch (error) {
         console.error("Auth state change error:", error);
         setUser(null);
       } finally {
         if (mounted) {
+          console.log("Setting loading to false (auth change)");
           setLoading(false);
         }
       }
@@ -70,15 +76,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         let role = 'User'; // Default role
         try {
+          console.log("Getting user role for:", session.user.id);
           role = await getUserRole(session.user.id);
+          console.log("Role received:", role);
         } catch (roleError) {
           console.warn("Could not get user role, using default:", roleError);
         }
-        
         setUser({
           id: session.user.id,
           email: session.user.email || '',
-          role
+          role,
+          raw_user_meta_data: session.user.user_metadata || session.user.raw_user_meta_data || {},
         });
       } catch (error) {
         console.error("Error handling session:", error);

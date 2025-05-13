@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
@@ -35,9 +34,7 @@ const Layout = () => {
         {/* Main content area */}
         <main className={cn(
           "flex-1 transition-all duration-300 ease-in-out",
-          isMobile ? "mt-16" : "",
-          !isMobile && sidebarOpen ? "ml-64" : "",
-          !isMobile && !sidebarOpen ? "ml-16" : ""
+          isMobile ? "mt-16" : ""
         )}>
           <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
             <Outlet />

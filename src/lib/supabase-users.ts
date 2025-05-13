@@ -7,14 +7,33 @@ import { supabase } from './supabase-client';
  */
 export const getUserRole = async (userId: string): Promise<string> => {
   try {
-    const { data, error } = await supabase
+    console.log("getUserRole: querying user_roles for", userId);
+
+    // Add a timeout to the query
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("getUserRole timed out")), 5000)
+    );
+
+    const queryPromise = supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
       .single();
 
-    if (error) throw error;
-    return data?.role || 'User';
+    // Await the result or timeout
+    const result = await Promise.race([queryPromise, timeout]);
+
+    // If result is an error thrown by timeout, it will be caught below
+    // Otherwise, result is the query result
+    if (typeof result === 'object' && result !== null && 'data' in result && 'error' in result) {
+      const { data, error } = result as { data: any; error: any };
+      if (error) throw error;
+      console.log("getUserRole: query result", data);
+      return data?.role || 'User';
+    } else {
+      // This should only happen if the timeout throws
+      throw new Error("getUserRole: Unexpected result or timeout");
+    }
   } catch (error) {
     console.error("Error getting user role:", error);
     return 'User'; // Default role if there's an error

@@ -9,6 +9,26 @@ import UserManagement from "@/pages/UserManagement";
 import NotFound from "@/pages/NotFound";
 import Loading from "@/components/ui/loading";
 
+// Add the guard component for login
+function LoginGuard() {
+  const { user, loading } = useAuth();
+  if (loading) return <Loading />;
+  if (user) {
+    return <Navigate to="/dashboard" />;
+  }
+  return <Login />;
+}
+
+// Add the guard component here
+function UserManagementGuard() {
+  const { user, loading } = useAuth();
+  if (loading) return <Loading />;
+  if (user?.role === "Admin") {
+    return <UserManagement />;
+  }
+  return <Navigate to="/dashboard" />;
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
@@ -28,16 +48,11 @@ export function Router() {
   const location = useLocation();
   const { user, loading } = useAuth();
 
-  // Conditional rendering after all hooks have been called
-  if (loading) {
-    return <Loading />;
-  }
-
   // Define routes configuration
   const routes = [
     {
       path: "/login",
-      element: user ? <Navigate to="/dashboard" /> : <Login />
+      element: <LoginGuard />
     },
     {
       element: <ProtectedRoute><Layout /></ProtectedRoute>,
@@ -46,10 +61,7 @@ export function Router() {
         { path: "/dashboard", element: <Dashboard /> },
         { path: "/reports", element: <Reports /> },
         { path: "/transactions", element: <Transactions /> },
-        { 
-          path: "/user-management", 
-          element: user?.role === "Admin" ? <UserManagement /> : <Navigate to="/dashboard" /> 
-        },
+        { path: "/user-management", element: <UserManagementGuard /> },
         { path: "*", element: <NotFound /> },
       ],
     },

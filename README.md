@@ -1,73 +1,77 @@
-# Welcome to your Lovable project
+# Prolific Homecare Financial Tracker
 
-## Project info
+## Project Overview
 
-**URL**: https://lovable.dev/projects/c3bb15ac-36a7-4f56-8d3a-cd4ac2263ca0
+Prolific Homecare Financial Tracker is a modern web application designed to help Prolific homecare LLC efficiently track, analyze, and manage their financial data. The app features a beautiful, responsive dashboard, robust transaction management, insightful reports, and secure user management—all with a mobile-first, accessible design.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Dashboard:**
+  - Visual overview of financial performance (revenue, expenses, profit, charts, and recent transactions)
+- **Transactions:**
+  - Add, view, and manage all financial transactions
+- **Reports:**
+  - Generate and view detailed financial reports
+- **User Management:**
+  - Admins can manage user roles and permissions
+- **Authentication:**
+  - Secure login and user management powered by Supabase Auth
+- **Responsive Sidebar:**
+  - Collapsible, mobile-friendly sidebar with icons and tooltips
+- **Light/Dark Mode:**
+  - Toggle between light and dark themes for optimal accessibility
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/c3bb15ac-36a7-4f56-8d3a-cd4ac2263ca0) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
+## Tech Stack
 
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase (database & authentication)
 
-## How can I deploy this project?
+## Getting Started
 
-Simply open [Lovable](https://lovable.dev/projects/c3bb15ac-36a7-4f56-8d3a-cd4ac2263ca0) and click on Share -> Publish.
+### Prerequisites
+- Node.js & npm (recommended: use [nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
 
-## Can I connect a custom domain to my Lovable project?
+### Setup
+```sh
+# Clone the repository
+git clone <YOUR_GIT_URL>
+cd <YOUR_PROJECT_NAME>
 
-Yes, you can!
+# Install dependencies
+npm i
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Start the development server
+npm run dev
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Usage
+- Visit `http://localhost:5173` (or the port shown in your terminal)
+- Log in with your credentials (or sign up if enabled)
+- Use the sidebar to navigate between Dashboard, Transactions, Reports, and User Management
+- Toggle light/dark mode using the switch in the sidebar
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/YourFeature`)
+3. Commit your changes (`git commit -am 'Add new feature'`)
+4. Push to the branch (`git push origin feature/YourFeature`)
+5. Open a pull request
+
+## Deployment
+
+You can deploy this project using [Lovable](https://lovable.dev/projects/c3bb15ac-36a7-4f56-8d3a-cd4ac2263ca0):
+- Open Lovable and click on Share -> Publish.
+- For custom domains, go to Project > Settings > Domains and follow the instructions.
+
+## Project URL
+
+**URL**: https://lovable.dev/projects/c3bb15ac-36a7-4f56-8d3a-cd4ac2263ca0
+
+---
+
+_This project is built and maintained with ❤️ by the Prolific Homecare team._

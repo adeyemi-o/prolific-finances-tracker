@@ -1,4 +1,3 @@
-
 import { NavLink } from "react-router-dom";
 import { 
   LayoutDashboard,
@@ -8,7 +7,8 @@ import {
   Menu,
   X,
   LogOut,
-  ChevronsLeft
+  ChevronsLeft,
+  ChevronsRight
 } from "lucide-react";
 import { 
   Sidebar as SidebarComponent,
@@ -24,12 +24,36 @@ import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMobile, useTablet } from "@/hooks/use-mobile";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 type SidebarProps = {
   isOpen: boolean;
   onToggle: () => void;
 };
+
+const menuItems = [
+  {
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    to: "/dashboard",
+  },
+  {
+    label: "Transactions",
+    icon: FileText,
+    to: "/transactions",
+  },
+  {
+    label: "Reports",
+    icon: BarChart3,
+    to: "/reports",
+  },
+  {
+    label: "User Management",
+    icon: Users,
+    to: "/user-management",
+  },
+];
 
 const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const { user, logout, loading } = useAuth();
@@ -37,6 +61,9 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
   const isTablet = useTablet();
   const [isDesktop, setIsDesktop] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const [collapsed, setCollapsed] = useState(false);
 
   // Check for desktop size using similar approach as the hooks
   useEffect(() => {
@@ -68,6 +95,8 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
     }
   };
 
+  const displayName = (user && user.raw_user_meta_data?.display_name) || user?.email || 'User';
+
   return (
     <>
       {/* Mobile top bar */}
@@ -98,177 +127,101 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       )}
 
       {/* Main sidebar */}
-      <div 
+      <div
+        ref={sidebarRef}
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex flex-col bg-card border-r border-border transition-transform duration-300 ease-in-out",
-          isMobile ? "w-72" : "",
+          "fixed inset-y-0 left-0 z-40 flex flex-col transition-transform duration-300 ease-in-out",
+          "backdrop-blur-xl bg-white/10 dark:bg-neutral-900/60 shadow-2xl rounded-xl m-2",
+          isMobile ? "w-72" : collapsed ? "w-20" : "w-64",
           isMobile && !isOpen && "-translate-x-full",
-          isMobile && isOpen && "translate-x-0 shadow-xl",
-          !isMobile && "shadow-sm",
-          !isMobile && isOpen && "w-64 translate-x-0",
-          !isMobile && !isOpen && "w-16 translate-x-0"
+          isMobile && isOpen && "translate-x-0",
+          !isMobile && "shadow-xl"
         )}
+        style={{ minHeight: 'calc(100vh - 1rem)' }}
       >
-        <div className="flex flex-col h-full overflow-hidden">
-          {/* Sidebar header */}
-          <div className="border-b border-border/80">
-            <div className={cn(
-              "px-3 h-16 flex items-center justify-between transition-all duration-300",
-              !isMobile && !isOpen && "px-2 justify-center"
-            )}>
-              <div className={cn(
-                "flex items-center gap-2 overflow-hidden",
-                !isMobile && !isOpen && "gap-0"
-              )}>
-                <img
-                  src="/prolific-homecare-logo.png"
-                  alt="Prolific Homecare"
-                  className={cn(
-                    "h-8 w-auto flex-shrink-0 transition-all duration-300",
-                    !isMobile && !isOpen && "h-7"
-                  )}
-                />
-                <span className={cn(
-                  "text-lg font-semibold text-primary whitespace-nowrap transition-opacity duration-200 delay-100",
-                  (!isMobile && !isOpen) && "opacity-0 w-0"
-                )}>
-                  FinTrack
-                </span>
-              </div>
-              {!isMobile && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={onToggle}
-                  className={cn(
-                    "rounded-full h-7 w-7 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-all duration-300",
-                    !isOpen && "rotate-180"
-                  )}
-                  aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
-                >
-                  <ChevronsLeft className="h-4 w-4" />
-                </Button>
-              )}
-              {isMobile && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  onClick={onToggle}
-                  className="lg:hidden h-8 w-8 -mr-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              )}
-            </div>
+        {/* Company Logo */}
+        <div className="flex flex-col items-center pt-6 pb-2 px-4">
+          <img
+            src="/prolific-homecare-logo.png"
+            alt="Prolific Homecare Logo"
+            className={cn("h-12 w-auto mb-2 transition-all duration-300", collapsed && "h-10")}
+          />
+        </div>
+        {/* Profile Section */}
+        <div className={cn("flex flex-col items-center gap-2 pb-4 px-4 border-b border-white/10 transition-all duration-300", collapsed && "pb-2")}> 
+          <div className="h-14 w-14 rounded-full object-cover border-2 border-white/20 shadow bg-blue-500 flex items-center justify-center text-white text-2xl font-bold">
+            {displayName.charAt(0).toUpperCase()}
           </div>
-          
-          {/* Navigation section */}
-          <div className="flex-1 overflow-y-auto py-3 scrollbar-thin">
-            <nav className="grid gap-1 px-2">
-              <NavLink 
-                to="/" 
-                end
-                className={({ isActive }) => cn(
-                  "nav-item group",
-                  isActive && "nav-item-active"
-                )}
-                onClick={isMobile ? onToggle : undefined}
-              >
-                <LayoutDashboard className="nav-item-icon" />
-                <span className={cn(
-                  "nav-item-text",
-                  (!isMobile && !isOpen) && "nav-item-text-collapsed"
-                )}>Dashboard</span>
-              </NavLink>
-              
-              <NavLink 
-                to="/transactions" 
-                className={({ isActive }) => cn(
-                  "nav-item group",
-                  isActive && "nav-item-active"
-                )}
-                onClick={isMobile ? onToggle : undefined}
-              >
-                <FileText className="nav-item-icon" />
-                <span className={cn(
-                  "nav-item-text",
-                  (!isMobile && !isOpen) && "nav-item-text-collapsed"
-                )}>Transactions</span>
-              </NavLink>
-              
-              <NavLink 
-                to="/reports" 
-                className={({ isActive }) => cn(
-                  "nav-item group",
-                  isActive && "nav-item-active"
-                )}
-                onClick={isMobile ? onToggle : undefined}
-              >
-                <BarChart3 className="nav-item-icon" />
-                <span className={cn(
-                  "nav-item-text",
-                  (!isMobile && !isOpen) && "nav-item-text-collapsed"
-                )}>Reports</span>
-              </NavLink>
-              
-              {/* Always show User Management menu for all users */}
-              <NavLink 
-                to="/user-management" 
-                className={({ isActive }) => cn(
-                  "nav-item group",
-                  isActive && "nav-item-active"
-                )}
-                onClick={isMobile ? onToggle : undefined}
-              >
-                <Users className="nav-item-icon" />
-                <span className={cn(
-                  "nav-item-text",
-                  (!isMobile && !isOpen) && "nav-item-text-collapsed"
-                )}>User Management</span>
-              </NavLink>
-            </nav>
-          </div>
-          
-          {/* Footer with user profile & logout */}
-          <div className={cn(
-            "mt-auto border-t border-border/80 p-3",
-            (!isMobile && !isOpen) && "p-2"
+          <span className={cn(
+            "font-semibold text-lg truncate max-w-[140px] transition-all duration-300",
+            collapsed ? "text-xs max-w-[32px] text-neutral-900 dark:text-white" : "text-neutral-900 dark:text-white"
           )}>
-            <div className={cn(
-              "flex items-center justify-between",
-              (!isMobile && !isOpen) && "flex-col gap-2"
-            )}>
-              <div className={cn(
-                "flex items-center gap-2 min-w-0",
-                (!isMobile && !isOpen) && "flex-col text-center"
-              )}>
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-muted-foreground font-medium text-xs">
-                  {user?.email?.charAt(0).toUpperCase() || 'U'}
-                </div>
-                <div className={cn(
-                  "flex-1 min-w-0",
-                  (!isMobile && !isOpen) && "hidden"
-                )}>
-                  <p className="text-sm font-medium truncate">{user?.email || 'User Email'}</p>
-                  <p className="text-xs text-muted-foreground truncate">{user?.role || 'Role'}</p>
-                </div>
+            {displayName}
+          </span>
+          {!collapsed && (
+            <span className="text-sm text-neutral-500 dark:text-white/80">Hello 👋</span>
+          )}
+        </div>
+        {/* Collapse/Expand Toggle (desktop/tablet only) */}
+        {!isMobile && (
+          <button
+            className="flex items-center justify-center mx-auto my-2 p-2 rounded-full bg-white/20 hover:bg-white/30 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-all"
+            onClick={() => setCollapsed((prev) => !prev)}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <ChevronsRight className="h-5 w-5 text-white" /> : <ChevronsLeft className="h-5 w-5 text-white" />}
+          </button>
+        )}
+        {/* Menu Section */}
+        <nav className="flex-1 flex flex-col gap-1 py-4 px-2 overflow-y-auto">
+          {menuItems.map((item, idx) => {
+            const isUserManagement = item.label === "User Management";
+            return (
+              <div key={item.label} className="relative group">
+                <NavLink
+                  to={isUserManagement ? "#" : item.to}
+                  className={({ isActive }) => cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 transition-all relative",
+                    collapsed ? "justify-center" : "justify-start",
+                    "hover:bg-neutral-100 dark:hover:bg-white/10",
+                    isActive && !isUserManagement && "bg-neutral-200 dark:bg-white/10 text-primary dark:text-white",
+                    !isActive && "text-neutral-900 dark:text-white",
+                    isUserManagement && "opacity-50 pointer-events-none cursor-not-allowed"
+                  )}
+                  onClick={isMobile ? onToggle : undefined}
+                  tabIndex={isUserManagement ? -1 : 0}
+                  aria-disabled={isUserManagement}
+                >
+                  <item.icon className="h-5 w-5 mr-2" />
+                  {(!collapsed || isMobile) && <span className="flex-1 text-left">{item.label}</span>}
+                </NavLink>
+                {/* Active indicator bar */}
+                <span className={cn(
+                  "absolute left-0 top-2 bottom-2 w-1 rounded-full bg-green-400 transition-all",
+                  window.location.pathname === item.to && !isUserManagement && "opacity-100"
+                )} />
               </div>
-
-              <Button 
-                variant="ghost" 
-                size={(!isMobile && !isOpen) ? "icon" : "sm"}
+            );
+          })}
+        </nav>
+        {/* Footer with logout and theme toggle */}
+        <div className="flex flex-col items-center gap-2 py-4 border-t border-white/10">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size={isOpen ? "sm" : "icon"}
                 onClick={handleLogout}
-                className={cn(
-                  "text-muted-foreground hover:bg-destructive/10 hover:text-destructive",
-                  (!isMobile && !isOpen) ? "h-8 w-8" : "gap-2"
-                )}
+                className="text-neutral-900 dark:text-white hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-600 dark:hover:text-red-500"
                 aria-label="Logout"
               >
-                <LogOut className="h-4 w-4 flex-shrink-0" />
-                <span className={cn((!isMobile && !isOpen) && "hidden")}>Logout</span>
+                <LogOut className="h-5 w-5" />
+                {isOpen && <span className="ml-2">Logout</span>}
               </Button>
-            </div>
-          </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" align="center">Logout</TooltipContent>
+          </Tooltip>
+          <ThemeToggle />
         </div>
       </div>
 
@@ -285,7 +238,7 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       {!isMobile && (
         <div className={cn(
           "hidden md:block transition-all duration-300",
-          isOpen ? "w-64" : "w-16"
+          isOpen ? "w-64" : "w-20"
         )}></div>
       )}
     </>
