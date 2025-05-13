@@ -127,7 +127,7 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       )}
 
       {/* Main sidebar */}
-      <div
+      <div 
         ref={sidebarRef}
         className={cn(
           "fixed inset-y-0 left-0 z-40 flex flex-col transition-transform duration-300 ease-in-out",
@@ -141,8 +141,8 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
       >
         {/* Company Logo */}
         <div className="flex flex-col items-center pt-6 pb-2 px-4">
-          <img
-            src="/prolific-homecare-logo.png"
+                <img
+                  src="/prolific-homecare-logo.png"
             alt="Prolific Homecare Logo"
             className={cn("h-12 w-auto mb-2 transition-all duration-300", collapsed && "h-10")}
           />
@@ -152,23 +152,23 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
           <div className="h-14 w-14 rounded-full object-cover border-2 border-white/20 shadow bg-blue-500 flex items-center justify-center text-white text-2xl font-bold">
             {displayName.charAt(0).toUpperCase()}
           </div>
-          <span className={cn(
+                <span className={cn(
             "font-semibold text-lg truncate max-w-[140px] transition-all duration-300",
             collapsed ? "text-xs max-w-[32px] text-neutral-900 dark:text-white" : "text-neutral-900 dark:text-white"
-          )}>
+                )}>
             {displayName}
-          </span>
+                </span>
           {!collapsed && (
             <span className="text-sm text-neutral-500 dark:text-white/80">Hello 👋</span>
-          )}
-        </div>
+              )}
+            </div>
         {/* Collapse/Expand Toggle (desktop/tablet only) */}
         {!isMobile && (
           <button
             className="flex items-center justify-center mx-auto my-2 p-2 rounded-full bg-white/20 hover:bg-white/30 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-all"
             onClick={() => setCollapsed((prev) => !prev)}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
+              >
             {collapsed ? <ChevronsRight className="h-5 w-5 text-white" /> : <ChevronsLeft className="h-5 w-5 text-white" />}
           </button>
         )}
@@ -178,23 +178,23 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
             const isUserManagement = item.label === "User Management";
             return (
               <div key={item.label} className="relative group">
-                <NavLink
+              <NavLink 
                   to={isUserManagement ? "#" : item.to}
-                  className={({ isActive }) => cn(
+                className={({ isActive }) => cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 transition-all relative",
                     collapsed ? "justify-center" : "justify-start",
                     "hover:bg-neutral-100 dark:hover:bg-white/10",
                     isActive && !isUserManagement && "bg-neutral-200 dark:bg-white/10 text-primary dark:text-white",
                     !isActive && "text-neutral-900 dark:text-white",
                     isUserManagement && "opacity-50 pointer-events-none cursor-not-allowed"
-                  )}
-                  onClick={isMobile ? onToggle : undefined}
+                )}
+                onClick={isMobile ? onToggle : undefined}
                   tabIndex={isUserManagement ? -1 : 0}
                   aria-disabled={isUserManagement}
-                >
+              >
                   <item.icon className="h-5 w-5 mr-2" />
                   {(!collapsed || isMobile) && <span className="flex-1 text-left">{item.label}</span>}
-                </NavLink>
+              </NavLink>
                 {/* Active indicator bar */}
                 <span className={cn(
                   "absolute left-0 top-2 bottom-2 w-1 rounded-full bg-green-400 transition-all",
@@ -203,13 +203,36 @@ const Sidebar = ({ isOpen, onToggle }: SidebarProps) => {
               </div>
             );
           })}
+          {user?.role === "Admin" && (
+            <div className="relative group">
+              <NavLink
+                to="/audit-logs"
+                className={({ isActive }) => cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2 transition-all relative",
+                  collapsed ? "justify-center" : "justify-start",
+                  "hover:bg-neutral-100 dark:hover:bg-white/10",
+                  isActive && "bg-neutral-200 dark:bg-white/10 text-primary dark:text-white",
+                  !isActive && "text-neutral-900 dark:text-white"
+                )}
+                onClick={isMobile ? onToggle : undefined}
+              >
+                <BarChart3 className="h-5 w-5 mr-2" />
+                {(!collapsed || isMobile) && <span className="flex-1 text-left">Audit Logs</span>}
+              </NavLink>
+              {/* Active indicator bar */}
+              <span className={cn(
+                "absolute left-0 top-2 bottom-2 w-1 rounded-full bg-green-400 transition-all",
+                window.location.pathname === "/audit-logs" && "opacity-100"
+              )} />
+            </div>
+          )}
         </nav>
         {/* Footer with logout and theme toggle */}
         <div className="flex flex-col items-center gap-2 py-4 border-t border-white/10">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
+              <Button 
+                variant="ghost" 
                 size={isOpen ? "sm" : "icon"}
                 onClick={handleLogout}
                 className="text-neutral-900 dark:text-white hover:bg-red-100 dark:hover:bg-red-500/20 hover:text-red-600 dark:hover:text-red-500"
