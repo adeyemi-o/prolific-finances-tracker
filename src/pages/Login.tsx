@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { LockKeyhole, Mail } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import Footer from "@/components/ui/footer";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -56,8 +56,8 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center max-w-4xl w-full">
+    <div className="min-h-screen flex flex-col justify-center bg-background p-4">
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-16 items-center max-w-4xl w-full mx-auto">
         <div className="hidden md:flex justify-center items-center">
           <img 
             src="/analysis-business-finance.svg"
@@ -132,6 +132,7 @@ const Login = () => {
           </Card>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

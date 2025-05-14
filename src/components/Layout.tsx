@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { SidebarWrapper, SidebarProvider } from "@/components/ui/sidebar";
 import Loading from "@/components/ui/loading";
 import { useLocation } from "react-router-dom";
+import Footer from "@/components/ui/footer";
 
 const Layout = () => {
   const isMobile = useMobile();
@@ -47,16 +48,17 @@ const Layout = () => {
         
         {/* Main content area */}
         <main className={cn(
-          "flex-1 transition-all duration-300 ease-in-out",
+          "flex-1 transition-all duration-300 ease-in-out flex flex-col", // Make main a flex column
           isMobile ? "mt-16" : ""
         )}>
-          <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+          <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full flex flex-col">
             {isLoading ? (
               <Loading text="Loading content..." />
             ) : (
               <Outlet />
             )}
           </div>
+          <Footer />
         </main>
         
         <Toaster position="bottom-right" />
